@@ -140,6 +140,7 @@ SizedBox(
 controller.swipe(SwipeDirection.right); // from a button: same behavior
 controller.undo();                      // the last swiped card comes back
 controller.rewind();                    // all of them, one after another
+controller.jumpTo(ValueKey(profile));  // make another card the top card
 ```
 
 **Behaviors** (`SwipeOutcome`): `dismiss` flies off; `consume` flies the card
@@ -154,6 +155,11 @@ card pour into its target like the macOS Dock minimize effect: the whole card fu
 that point narrowing first and the rest following in one smooth curve, warping the card's own
 picture. Undoing it pours the card back out of the button. `genieLag` sets the
 length of the funnel. (`shrink`, the default, is a plain shrinking flight.)
+
+**Starting or jumping to a card.** `initialIndex` starts at a saved position and
+`controller.jumpTo(key)` follows an outside change (a player moving to another
+song, say). Cards before the top one count as swiped, so `undo` still brings
+them back, sliding in from above.
 
 **Rewind and undo.** Cards can be coming back while others are already on
 top of them, so `rewind()` (optionally `count:` and `stagger:`) and rapid

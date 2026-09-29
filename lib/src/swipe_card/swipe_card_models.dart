@@ -46,6 +46,7 @@ class _Record<T> {
     required this.tilt,
     this.target,
     this.targetRect,
+    this.restored = false,
   });
 
   final _Entry<T> entry;
@@ -62,6 +63,11 @@ class _Record<T> {
   /// coordinates then (used when the target is no longer on screen).
   final SwipeTarget? target;
   final Rect? targetRect;
+
+  /// Whether this card was already gone when the stack started (see
+  /// `initialIndex`), so it has no flight to reverse and comes back from
+  /// above.
+  final bool restored;
 
   /// A picture of a genie-consumed card, kept so it can pour back out. Only
   /// the most recent few are kept.

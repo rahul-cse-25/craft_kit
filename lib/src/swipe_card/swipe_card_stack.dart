@@ -103,11 +103,13 @@ class SwipeCardStack<T> extends StatefulWidget {
     this.onPreload,
     this.preloadCount = 2,
     this.historyLimit = 20,
+    this.initialIndex = 0,
     this.enabled = true,
     this.enableKeyboard = true,
     this.autofocus = false,
     this.directionLabel,
   }) : assert(historyLimit >= 0),
+       assert(initialIndex >= 0),
        assert(needMoreThreshold >= 0),
        assert(preloadCount >= 0);
 
@@ -182,6 +184,12 @@ class SwipeCardStack<T> extends StatefulWidget {
 
   /// How many swipes can be undone.
   final int historyLimit;
+
+  /// The position in [items] of the first card to show. The cards before it
+  /// count as already swiped: they are not shown, and [SwipeCardController.undo]
+  /// brings them back (up to [historyLimit] of them), sliding in from above.
+  /// Only read when the stack starts and on [SwipeCardController.reset].
+  final int initialIndex;
 
   /// Whether the user can drag the top card. Programmatic swipes still work.
   final bool enabled;
@@ -273,7 +281,7 @@ class _SwipeCardStackState<T> extends State<SwipeCardStack<T>>
     _controller.attach(this);
     _ticker = createTicker(_onTick);
     _resolveBehaviors();
-    _syncItems(initial: true);
+    _syncItems(initial: true, from: widget.initialIndex);
     _schedulePublish();
   }
 
@@ -354,7 +362,7 @@ class _SwipeCardStackState<T> extends State<SwipeCardStack<T>>
   /// Reconciles the deck with [SwipeCardStack.items]: keeps order and
   /// progress, appends new items, drops missing ones, never resurrects a
   /// swiped card.
-  void _syncItems({bool initial = false}) {
+  void _syncItems({bool initial = false, int from = 0}) {
     final incoming = <Key, T>{};
     for (final item in widget.items) {
       final key = _keyOf(item);
@@ -367,9 +375,27 @@ class _SwipeCardStackState<T> extends State<SwipeCardStack<T>>
     }
 
     if (initial) {
+      final all = incoming.entries.toList();
+      final start = from.clamp(0, all.length);
       _deck
         ..clear()
-        ..addAll(incoming.entries.map((e) => _Entry<T>(e.value, e.key)));
+        ..addAll(all.skip(start).map((e) => _Entry<T>(e.value, e.key)));
+      // Cards before the start count as swiped: hidden, and undoable.
+      final first = math.max(0, start - widget.historyLimit);
+      for (var i = 0; i < start; i++) {
+        _dismissed.add(all[i].key);
+        if (i < first) continue;
+        _history.add(
+          _Record<T>(
+            entry: _Entry<T>(all[i].value, all[i].key),
+            direction: SwipeDirection.up,
+            outcome: SwipeOutcome.dismiss,
+            endPose: SwipePose.identity,
+            tilt: 1,
+            restored: true,
+          ),
+        );
+      }
       return;
     }
 
@@ -797,6 +823,12 @@ class _SwipeCardStackState<T> extends State<SwipeCardStack<T>>
 
     // Where the card comes from: still flying, or already gone.
     var start = record.endPose;
+    if (record.restored) {
+      start = SwipePose(
+        offset: Offset(0, -geometry.cardRect.height * 0.9),
+        opacity: 0.8,
+      );
+    }
     var image = record.image;
     record.image = null;
     var genieFrom = 1.0;
@@ -912,7 +944,27 @@ class _SwipeCardStackState<T> extends State<SwipeCardStack<T>>
   }
 
   @override
-  void reset() {
+  void reset() => _restart(0);
+
+  @override
+  bool jumpTo(Key key) {
+    if (_pointerDown) return false;
+    final index = widget.items.indexWhere((item) => _keyOf(item) == key);
+    if (index < 0) return false;
+    if (_deck.isNotEmpty && _deck.first.itemKey == key) return true;
+    _restart(index);
+    _later(() {
+      if (!mounted || _needMoreSent) return;
+      if (_deck.length <= widget.needMoreThreshold) {
+        _needMoreSent = true;
+        widget.onNeedMore?.call(_deck.length);
+      }
+    });
+    return true;
+  }
+
+  /// Drops every motion and starts the deck again with [from] on top.
+  void _restart(int from) {
     for (final leaver in _leavers) {
       final notifier = leaver.pose;
       final run = leaver.genie;
@@ -958,7 +1010,7 @@ class _SwipeCardStackState<T> extends State<SwipeCardStack<T>>
       ..s = 0;
     _controller.progressNotifier.value = SwipeProgress.zero;
     _controller.consumingNotifier.value = null;
-    _syncItems(initial: true);
+    _syncItems(initial: true, from: from);
     _publishCounts();
     _motion.changed();
     setState(() {});

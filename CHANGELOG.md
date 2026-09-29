@@ -30,6 +30,10 @@
   * `SwipeConsumeEffect.genie` (with `SwipeTarget.genieLag`): a consumed card
     funnels into the centre point of its target like the macOS Dock minimize effect, and back out on
     undo. Pictures kept for undoing are bounded and always released.
+  * `SwipeCardStack.initialIndex` and `SwipeCardController.jumpTo(key)`: start
+    at, or move to, any card without animating the ones in between. The cards
+    before it count as swiped and `undo` brings them back from above. For
+    saved positions and for following an outside change such as a player.
   * A card keeps its state as it moves from the back of the stack to the top
     and out, and a swipe rebuilds only the cards whose role changed.
   * Fixed: a card grabbed low flipped its tilt when released, and a card

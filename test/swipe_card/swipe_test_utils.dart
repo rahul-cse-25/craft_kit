@@ -5,6 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 /// Key of the card built for [item].
 Key cardKey(String item) => ValueKey<String>('card-$item');
 
+/// The stack's key for [item] (its `ValueKey`).
+Key itemKeyOf(String item) => ValueKey<String>(item);
+
 /// A target placed under the 300x400 stack, at x 0..60, y 400..460.
 final GlobalKey targetKey = GlobalKey(debugLabel: 'target');
 
@@ -29,6 +32,7 @@ Widget swipeApp({
   bool enabled = true,
   bool reduceMotion = false,
   int historyLimit = 20,
+  int initialIndex = 0,
   bool autofocus = false,
   Key? stackKey,
 }) {
@@ -66,6 +70,7 @@ Widget swipeApp({
                 overlayBuilder: overlayBuilder,
                 enabled: enabled,
                 historyLimit: historyLimit,
+                initialIndex: initialIndex,
                 autofocus: autofocus,
                 emptyBuilder: (context) => const Center(child: Text('empty')),
                 itemBuilder: (context, item, info) {

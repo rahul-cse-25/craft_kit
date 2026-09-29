@@ -18,6 +18,10 @@ abstract interface class SwipeHandle {
 
   /// Starts the deck over from the items.
   void reset();
+
+  /// Makes the card with [key] the top card without animating the cards in
+  /// between. Returns whether it was found and the stack was idle.
+  bool jumpTo(Key key);
 }
 
 /// Controls a `SwipeCardStack` from outside (for example from buttons) and
@@ -77,6 +81,16 @@ class SwipeCardController {
 
   /// Starts the deck over from the stack's items.
   void reset() => _handle?.reset();
+
+  /// Makes the card whose key is [key] the top card, instantly: the cards
+  /// before it count as already swiped (and can be brought back by [undo]),
+  /// the ones after it wait in the deck. Use it to follow an outside change,
+  /// such as a player moving to another song.
+  ///
+  /// [key] is the item's `itemKey` (or `ValueKey(item)` by default). Returns
+  /// false, changing nothing, when there is no such card, the stack is not
+  /// attached, or a card is being held.
+  bool jumpTo(Key key) => _handle?.jumpTo(key) ?? false;
 
   /// Connects a stack. Called by the stack; do not call it yourself.
   @internal
