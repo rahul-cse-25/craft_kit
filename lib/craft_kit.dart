@@ -1,16 +1,27 @@
 /// A growing toolkit of Flutter UI helpers.
 ///
 /// Features:
-/// * Remembered emails: [RememberedEmailStore] and [RememberEmailField].
-/// * OTP input: [OtpController] and [OtpField].
-/// * Swipeable cards: [SwipeCardStack] and [SwipeCardController].
+/// * Remembered emails: [RememberedEmailStore], [EmailFieldController],
+///   [EmailSuggestionEngine], [RememberedEmailField].
+/// * OTP input: [OtpCodeField] and [OtpCodeController].
+/// * Swipeable cards (preview): [SwipeCardStack] and [SwipeCardController].
 library;
 
-export 'src/email_remember/email_validator.dart';
-export 'src/email_remember/remember_email_field.dart';
-export 'src/email_remember/remembered_email_store.dart';
-export 'src/otp/otp_controller.dart';
-export 'src/otp/otp_field.dart';
+export 'src/email/email_input_formatter.dart';
+export 'src/email/email_validator.dart';
+export 'src/email/logic/email_field_controller.dart';
+export 'src/email/logic/email_suggestion_engine.dart';
+export 'src/email/logic/remembered_email_entry.dart';
+export 'src/email/logic/remembered_email_store.dart';
+export 'src/email/widgets/email_suggestions_view.dart';
+export 'src/email/widgets/remembered_email_field.dart';
+export 'src/otp/animation/otp_animation_spec.dart';
+export 'src/otp/controller/otp_code_controller.dart' hide OtpCodeFieldHandle;
+export 'src/otp/logic/otp_phase.dart';
+export 'src/otp/style/otp_haptics.dart';
+export 'src/otp/style/otp_labels.dart';
+export 'src/otp/style/otp_style.dart';
+export 'src/otp/widgets/otp_code_field.dart';
 export 'src/storage/craft_storage.dart';
 export 'src/swipe_card/swipe_card_controller.dart';
 export 'src/swipe_card/swipe_card_stack.dart';

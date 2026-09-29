@@ -1,13 +1,14 @@
 # craft_kit
 
-A growing toolkit of Flutter UI helpers. Each feature is self-contained, has no
-third-party dependencies, and is tested.
+A growing toolkit of Flutter UI helpers. Each feature is self-contained, has
+**no third-party dependencies**, and is tested. You bring the storage and (if
+you like) your own text field and chips; craft_kit brings the logic.
 
 | Feature | What you get |
 |---|---|
-| **Remembered emails** | `RememberedEmailStore` (logic) and `RememberEmailField` (widget) with "remember me", suggestions, de-duplication and a size cap. |
-| **OTP input** | `OtpController` and `OtpField`: typing, paste, long-press paste, and system autofill, all cleaned to a valid code. |
-| **Swipeable cards** | `SwipeCardStack` and `SwipeCardController`: drag, fling, programmatic swipe, undo, overlays. |
+| **Remembered emails** | History ranked by recency and use count, live suggestions with domain completion (`anna@gm` → `anna@gmail.com`), a UI-free controller, and a themed default field you can replace. |
+| **OTP input** | An animated code field: typing, paste, autofill, long-press delete, and a verification lifecycle (processing, success, failure, restore) with haptics. |
+| **Swipeable cards** *(preview)* | `SwipeCardStack` with drag, fling, programmatic swipe and undo. The API may change. |
 
 ## Install
 
@@ -22,21 +23,37 @@ import 'package:craft_kit/craft_kit.dart';
 
 ## Remembered emails
 
-The store is UI-independent and persists through a `CraftStorage` you provide,
-so the package does not force a storage plugin on you.
+Three layers, use as many as you want:
+
+1. **`RememberedEmailStore`**: where the history lives.
+   `StorageRememberedEmailStore` keeps it in any `CraftStorage`.
+2. **`EmailFieldController`**: text, focus and live suggestions. No UI.
+3. **`RememberedEmailField`**: a field plus suggestion chips.
 
 ```dart
-final store = RememberedEmailStore(storage: MyStorage(), maxEntries: 5);
-await store.load();
+final store = StorageRememberedEmailStore(PrefsStorage(prefs));
+final email = EmailFieldController(store: store);
 
-// In your form:
-RememberEmailField(store: store, controller: emailController);
+// UI, with the default themed field...
+RememberedEmailField(controller: email);
+
+// ...or keep your own text field and chips:
+RememberedEmailField(
+  controller: email,
+  fieldBuilder: (context, controller, focusNode) =>
+      MyTextField(controller: controller, focusNode: focusNode),
+  suggestionBuilder: (context, suggestion, onTap) =>
+      MyChip(label: suggestion.label, onTap: onTap),
+);
 
 // After a successful sign-in:
-await store.rememberIfEnabled(emailController.text);
+await email.rememberCurrentEmail();
+
+// Hide suggestions while another step is on screen:
+email.suggestionsEnabled = false;
 ```
 
-Example `CraftStorage` on top of `shared_preferences`:
+`CraftStorage` is three methods. On top of `shared_preferences`:
 
 ```dart
 class PrefsStorage implements CraftStorage {
@@ -52,62 +69,50 @@ class PrefsStorage implements CraftStorage {
 }
 ```
 
-> Emails are personal data. If that matters for your app, back `CraftStorage`
-> with encrypted storage and offer a way to clear it (`store.clear()`).
+Tune the behavior with `StorageRememberedEmailStore(maxEntries:, storageKey:,
+isValidEmail:)` and `EmailSuggestionEngine(commonDomains:, maxSuggestions:,
+isValidEmail:)`.
+
+> Emails are personal data. Back `CraftStorage` with encrypted storage if that
+> matters for your app, and offer a way to clear it (`store.clear()`,
+> `store.forgetEmail(...)`).
 
 ## OTP input
 
 ```dart
-final otp = OtpController(length: 6);
+final otp = OtpCodeController();
 
-OtpField(
+OtpCodeField(
   controller: otp,
-  autofocus: true,
-  onCompleted: (code) => verify(code),
+  length: 6,
+  onCompleted: (code) async {
+    otp.beginProcessing();                 // collapse into a loader
+    final ok = await verify(code);
+    ok ? otp.showSuccess() : otp.showFailure(keepCode: false);
+  },
 );
 ```
 
-Ways to fill the code:
-
-- **Typing**: on the keyboard.
-- **Paste**: long-press the boxes to paste the clipboard.
-- **System paste and autofill**: the hidden input advertises
-  `AutofillHints.oneTimeCode`, so iOS keyboard suggestions and Android
-  autofill work.
-- **From code**: `otp.setValue(...)`, for example with the result of an SMS
-  retrieval plugin.
-
-Any text is cleaned with `otp.extractCode`. `"G-123 456"` and
-`"Your code is 123456."` both become `123456`. Use `OtpInputType.alphanumeric`
-for codes with letters.
-
-## Swipeable cards
-
-```dart
-final controller = SwipeCardController();
-
-SizedBox(
-  height: 420,
-  child: SwipeCardStack<Profile>(
-    items: profiles,
-    controller: controller,
-    itemBuilder: (context, profile, index) => ProfileCard(profile),
-    onSwipe: (profile, index, direction) => handle(profile, direction),
-    overlayBuilder: (context, direction, progress) =>
-        Opacity(opacity: progress, child: Text(direction.name)),
-  ),
-);
-
-controller.swipe(SwipeDirection.right); // from a button
-controller.undo();
-```
-
-Options: `allowedDirections`, `threshold`, `visibleCards`, `maxAngle`,
-`duration`, `emptyBuilder`, `onEnd`.
+* **Filling:** type, paste, or system autofill (`AutofillHints.oneTimeCode`).
+  Or `otp.setCode(...)` from code, for example with an SMS-retrieval plugin.
+  Text is cleaned: `"123 456"` and `"Order 22, code 654321"` both work, and
+  Arabic-Indic digits are converted.
+* **Lifecycle:** `beginProcessing`, `showSuccess`, `showFailure`,
+  `restoreEditing`, plus `clear`, `requestFocus`, `unfocus`. `otp.phase`
+  reports where the field is.
+* **Look:** `style: null` derives colors from your `Theme`. Pass
+  `const OtpStyle()` for the dark-surface look, or `OtpStyle.fromTheme(theme,
+  base: ...)` to keep your own geometry. Everything else is configurable
+  through `OtpAnimationSpec`, `OtpHaptics` and `OtpLabels` (localizable
+  accessibility strings).
 
 ## Example
 
 A runnable demo of every feature is in [`example/`](example).
+
+## Migrating from bump_fm_app
+
+See [MIGRATION_FROM_BUMP.md](MIGRATION_FROM_BUMP.md).
 
 ## Contributing
 

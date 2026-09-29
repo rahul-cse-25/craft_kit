@@ -13,6 +13,11 @@ class CraftKitExample extends StatelessWidget {
     return MaterialApp(
       title: 'craft_kit',
       theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
+      darkTheme: ThemeData(
+        colorSchemeSeed: Colors.indigo,
+        brightness: Brightness.dark,
+        useMaterial3: true,
+      ),
       home: const DefaultTabController(
         length: 3,
         child: Scaffold(
@@ -56,51 +61,53 @@ class _EmailDemo extends StatefulWidget {
 
 class _EmailDemoState extends State<_EmailDemo> {
   // Swap MemoryCraftStorage for your own CraftStorage to persist for real.
-  final RememberedEmailStore _store = RememberedEmailStore(
-    storage: MemoryCraftStorage(),
+  final RememberedEmailStore _store = StorageRememberedEmailStore(
+    MemoryCraftStorage(),
   );
-  final TextEditingController _email = TextEditingController();
+  late final EmailFieldController _email = EmailFieldController(store: _store);
   final GlobalKey<FormState> _form = GlobalKey<FormState>();
-  late final Future<void> _loading = _store.load();
+
+  @override
+  void initState() {
+    super.initState();
+    _seed();
+  }
+
+  Future<void> _seed() async {
+    await _store.rememberEmail('anna@gmail.com');
+    await _store.rememberEmail('anna.work@acme.io');
+  }
 
   @override
   void dispose() {
     _email.dispose();
-    _store.dispose();
     super.dispose();
   }
 
   Future<void> _signIn() async {
     if (!_form.currentState!.validate()) return;
-    final saved = await _store.rememberIfEnabled(_email.text);
+    await _email.rememberCurrentEmail();
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(saved ? 'Email remembered' : 'Signed in')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Remembered ${_email.email}')));
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<void>(
-      future: _loading,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return Padding(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _form,
-            child: Column(
-              children: <Widget>[
-                RememberEmailField(store: _store, controller: _email),
-                const SizedBox(height: 16),
-                FilledButton(onPressed: _signIn, child: const Text('Sign in')),
-              ],
-            ),
-          ),
-        );
-      },
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Form(
+        key: _form,
+        child: Column(
+          children: <Widget>[
+            const Text('Type "an", or "you@gm" to see suggestions'),
+            const SizedBox(height: 16),
+            RememberedEmailField(controller: _email),
+            FilledButton(onPressed: _signIn, child: const Text('Sign in')),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -113,13 +120,35 @@ class _OtpDemo extends StatefulWidget {
 }
 
 class _OtpDemoState extends State<_OtpDemo> {
-  final OtpController _otp = OtpController(length: 6);
-  String? _status;
+  final OtpCodeController _otp = OtpCodeController();
+  String _status = 'Type or paste a 6-digit code';
+
+  @override
+  void initState() {
+    super.initState();
+    _otp.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void dispose() {
     _otp.dispose();
     super.dispose();
+  }
+
+  Future<void> _verify(String code) async {
+    setState(() => _status = 'Verifying $code...');
+    _otp.beginProcessing();
+    await Future<void>.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+    if (code == '123456') {
+      _otp.showSuccess();
+      setState(() => _status = 'Verified');
+    } else {
+      _otp.showFailure(keepCode: false);
+      setState(() => _status = 'Wrong code. Try 123456');
+    }
   }
 
   @override
@@ -129,24 +158,25 @@ class _OtpDemoState extends State<_OtpDemo> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          const Text('Type, or long-press the boxes to paste'),
-          const SizedBox(height: 16),
-          OtpField(
+          OtpCodeField(
             controller: _otp,
-            onCompleted: (code) => setState(() => _status = 'Entered $code'),
-            onChanged: (_) {
-              if (_status != null && !_otp.isComplete) {
-                setState(() => _status = null);
-              }
-            },
+            autoFocus: false,
+            onCompleted: _verify,
           ),
-          const SizedBox(height: 16),
-          Text(_status ?? ' '),
-          TextButton(
-            onPressed: () => _otp.setValue('Your code is 482913'),
-            child: const Text('Simulate SMS autofill'),
+          const SizedBox(height: 24),
+          Text(_status),
+          const SizedBox(height: 8),
+          Text('phase: ${_otp.phase.name}'),
+          Wrap(
+            spacing: 8,
+            children: <Widget>[
+              TextButton(
+                onPressed: () => _otp.setCode('Your code is 482913'),
+                child: const Text('Simulate SMS autofill'),
+              ),
+              TextButton(onPressed: _otp.clear, child: const Text('Clear')),
+            ],
           ),
-          TextButton(onPressed: _otp.clear, child: const Text('Clear')),
         ],
       ),
     );
@@ -177,27 +207,6 @@ class _SwipeDemoState extends State<_SwipeDemo> {
               controller: _controller,
               onSwipe: (item, index, direction) =>
                   setState(() => _last = 'Card $item swiped ${direction.name}'),
-              overlayBuilder: (context, direction, progress) => Opacity(
-                opacity: progress,
-                child: Align(
-                  alignment: direction == SwipeDirection.right
-                      ? Alignment.topLeft
-                      : Alignment.topRight,
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      direction == SwipeDirection.right ? 'LIKE' : 'NOPE',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        color: direction == SwipeDirection.right
-                            ? Colors.green
-                            : Colors.red,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
               emptyBuilder: (context) =>
                   const Center(child: Text('No more cards')),
               itemBuilder: (context, item, index) => Card(
