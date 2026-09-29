@@ -283,67 +283,69 @@ class _SwipeDemoState extends State<SwipeDemo> {
     );
   }
 
-  /// Every direction draws its own stamp from its own progress, so they fade
-  /// in and out independently and never flicker across the diagonal.
+  /// Every direction draws from its own progress, so they fade in and out
+  /// independently and never flicker across the diagonal.
   Widget _stamps(BuildContext context, SwipeProgress progress) {
-    return Stack(
-      fit: StackFit.expand,
-      children: <Widget>[
-        _Stamp('LIKE', Colors.green, Alignment.topLeft, progress.right, -0.25),
-        _Stamp('NOPE', Colors.red, Alignment.topRight, progress.left, 0.25),
-        _Stamp('SUPER', Colors.blue, Alignment.bottomCenter, progress.up, 0),
-        _Stamp(
-          _s.actions[SwipeDirection.down] == DirectionAction.undo
-              ? 'BACK'
-              : 'SKIP',
-          Colors.amber,
-          Alignment.topCenter,
-          progress.down,
-          0,
+    final back = _s.actions[SwipeDirection.down] == DirectionAction.undo;
+    if (_s.overlayStyle == OverlayStyle.stamps) {
+      return SwipeStampOverlay(
+        progress: progress,
+        borderRadius: BorderRadius.circular(28),
+        stamps: <SwipeStamp>[
+          const SwipeStamp(
+            direction: SwipeDirection.right,
+            label: 'LIKE',
+            color: Colors.green,
+          ),
+          const SwipeStamp(
+            direction: SwipeDirection.left,
+            label: 'NOPE',
+            color: Colors.red,
+          ),
+          const SwipeStamp(
+            direction: SwipeDirection.up,
+            label: 'SUPER',
+            color: Colors.blue,
+          ),
+          SwipeStamp(
+            direction: SwipeDirection.down,
+            label: back ? 'BACK' : 'SKIP',
+            color: Colors.amber,
+          ),
+        ],
+      );
+    }
+    return SwipeIntentOverlay(
+      progress: progress,
+      borderRadius: BorderRadius.circular(28),
+      intents: <SwipeIntent>[
+        const SwipeIntent(
+          direction: SwipeDirection.right,
+          color: Color(0xFF22C55E),
+          icon: Icon(Icons.favorite_rounded),
+          label: 'Like',
+        ),
+        const SwipeIntent(
+          direction: SwipeDirection.left,
+          color: Color(0xFFEF4444),
+          icon: Icon(Icons.close_rounded),
+          label: 'Nope',
+        ),
+        const SwipeIntent(
+          direction: SwipeDirection.up,
+          color: Color(0xFF3B82F6),
+          icon: Icon(Icons.star_rounded),
+          label: 'Super',
+        ),
+        SwipeIntent(
+          direction: SwipeDirection.down,
+          color: const Color(0xFFF59E0B),
+          icon: Icon(
+            back ? Icons.replay_rounded : Icons.keyboard_double_arrow_down,
+          ),
+          label: back ? 'Back' : 'Skip',
         ),
       ],
-    );
-  }
-}
-
-class _Stamp extends StatelessWidget {
-  const _Stamp(this.label, this.color, this.alignment, this.value, this.angle);
-
-  final String label;
-  final Color color;
-  final Alignment alignment;
-  final double value;
-  final double angle;
-
-  @override
-  Widget build(BuildContext context) {
-    if (value <= 0) return const SizedBox.shrink();
-    return Opacity(
-      opacity: value,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: color, width: 4),
-        ),
-        child: Align(
-          alignment: alignment,
-          child: Padding(
-            padding: const EdgeInsets.all(28),
-            child: Transform.rotate(
-              angle: angle,
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 38,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 2,
-                  color: color,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
@@ -1209,6 +1211,27 @@ class _InputSection extends StatelessWidget {
           value: s.showStamps,
           onChanged: (v) => s.change(() => s.showStamps = v),
         ),
+        if (s.showStamps)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SegmentedButton<OverlayStyle>(
+              key: const ValueKey<String>('overlay-style'),
+              showSelectedIcon: false,
+              segments: const <ButtonSegment<OverlayStyle>>[
+                ButtonSegment<OverlayStyle>(
+                  value: OverlayStyle.stamps,
+                  label: Text('stamps'),
+                ),
+                ButtonSegment<OverlayStyle>(
+                  value: OverlayStyle.badge,
+                  label: Text('badge'),
+                ),
+              ],
+              selected: <OverlayStyle>{s.overlayStyle},
+              onSelectionChanged: (v) =>
+                  s.change(() => s.overlayStyle = v.first),
+            ),
+          ),
         _SwitchTile(
           label: 'Reduce motion',
           subtitle: 'What a user with "remove animations" sees',

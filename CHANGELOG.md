@@ -34,10 +34,18 @@
     at, or move to, any card without animating the ones in between. The cards
     before it count as swiped and `undo` brings them back from above. For
     saved positions and for following an outside change such as a player.
+  * `SwipeStampOverlay` and `SwipeStamp`: the classic overlay, a coloured frame
+    and a rotated word (LIKE, NOPE) in the corner, fading in with the drag.
+  * `SwipeIntentOverlay` and `SwipeIntent`: a ready-made drag overlay (a colour
+    wash rising from the edge the card heads to, and a badge that arms when
+    releasing would commit), drawn purely from the live progress.
   * A card keeps its state as it moves from the back of the stack to the top
     and out, and a swipe rebuilds only the cards whose role changed.
   * Fixed: a card grabbed low flipped its tilt when released, and a card
     returned by undo did not keep the tilt it left with.
+* Fixed: the first build after `runApp` or a hot restart could trip a `!_dirty`
+  assertion when a listener above an `OtpCodeField` rebuilt on the field's first
+  snapshot. Snapshots are now always announced at the end of the frame.
 * `OtpCodeController.showSuccessAndWait()` returns a future that completes when
   the success animation ends.
 * `OtpStyle.canvasVerticalPadding` (default 44) and `OtpStyle.resultGlow`

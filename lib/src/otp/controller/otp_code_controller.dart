@@ -93,21 +93,22 @@ class OtpCodeController extends ChangeNotifier {
 
   /// The field publishes snapshots from `initState` and `didUpdateWidget`,
   /// which run while the tree is building. A listener that calls `setState`
-  /// then would dirty an element mid-build and trip a framework assertion. So
-  /// during the build/layout/paint phase, notification waits for the end of
-  /// the frame. The values above are already up to date either way.
+  /// then would dirty an element mid-build and trip a framework assertion.
+  ///
+  /// The scheduler phase cannot tell us whether that is happening: the very
+  /// first build after `runApp` or a hot restart runs outside any frame, so
+  /// the phase is idle while the tree is being built. So a snapshot is never
+  /// announced synchronously; listeners hear about it at the end of the frame.
+  /// The values above are already up to date either way.
   void _notifyWhenSafe() {
-    final SchedulerBinding binding = SchedulerBinding.instance;
-    if (binding.schedulerPhase != SchedulerPhase.persistentCallbacks) {
-      notifyListeners();
-      return;
-    }
     if (_notifyQueued) return;
     _notifyQueued = true;
+    final SchedulerBinding binding = SchedulerBinding.instance;
     binding.addPostFrameCallback((_) {
       _notifyQueued = false;
       if (!_disposed) notifyListeners();
     });
+    binding.ensureVisualUpdate();
   }
 
   @override

@@ -2,6 +2,10 @@ import 'package:craft_kit/craft_kit.dart';
 import 'package:flutter/foundation.dart';
 
 /// What a direction does in the swipe lab. `off` means no behavior at all.
+/// The look of the drag overlay: the classic framed stamps, or a colour wash
+/// with an icon badge.
+enum OverlayStyle { badge, stamps }
+
 enum DirectionAction { off, dismiss, consume, springBack, sendToBack, undo }
 
 /// A label for a [DirectionAction].
@@ -73,6 +77,7 @@ class SwipeLabSettings extends ChangeNotifier {
   bool hapticThreshold = true;
   bool hapticCommit = true;
   bool showStamps = true;
+  OverlayStyle overlayStyle = OverlayStyle.badge;
 
   // ---- deck ----
   int deckSize = 8;
@@ -166,6 +171,7 @@ class SwipeLabSettings extends ChangeNotifier {
     hapticThreshold = true;
     hapticCommit = true;
     showStamps = true;
+    overlayStyle = OverlayStyle.badge;
     deckSize = 8;
     historyLimit = 20;
     infinite = false;

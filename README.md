@@ -156,6 +156,15 @@ that point narrowing first and the rest following in one smooth curve, warping t
 picture. Undoing it pours the card back out of the button. `genieLag` sets the
 length of the funnel. (`shrink`, the default, is a plain shrinking flight.)
 
+**Overlay.** `SwipeStampOverlay` is the classic: a coloured frame and a rotated
+word (LIKE, NOPE...) in the corner that fade in with the drag, one `SwipeStamp`
+per direction. `SwipeIntentOverlay` is a second, softer look: give it a `SwipeIntent` (colour,
+icon, word) per direction and it draws a wash of colour
+rising from the edge the card is heading to and a badge that grows with the
+drag and arms, with its word, exactly when releasing would commit. It is a pure
+function of the progress, so it is right at every moment of a drag, release or
+programmatic swipe.
+
 **Starting or jumping to a card.** `initialIndex` starts at a saved position and
 `controller.jumpTo(key)` follows an outside change (a player moving to another
 song, say). Cards before the top one count as swiped, so `undo` still brings
