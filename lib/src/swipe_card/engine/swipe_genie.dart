@@ -109,54 +109,61 @@ abstract final class SwipeGenie {
     final stride = n + 1;
     final out = Float32List(stride * stride * 2);
 
-    final tl = quad[0];
-    final tr = quad[1];
-    final br = quad[2];
-    final bl = quad[3];
-    final center = (tl + tr + br + bl) / 4;
+    // Plain doubles throughout: this runs for every vertex on every frame, so
+    // it avoids allocating an Offset per step.
+    final tlx = quad[0].dx, tly = quad[0].dy;
+    final trx = quad[1].dx, try_ = quad[1].dy;
+    final brx = quad[2].dx, bry = quad[2].dy;
+    final blx = quad[3].dx, bly = quad[3].dy;
+    final cx = (tlx + trx + brx + blx) / 4;
+    final cy = (tly + try_ + bry + bly) / 4;
 
     // The funnel's axis: from the card's centre to the target.
-    final toTarget = target - center;
-    final distance = toTarget.distance;
-    final axis = distance < 1e-6 ? const Offset(0, 1) : toTarget / distance;
-    final side = Offset(-axis.dy, axis.dx);
+    final tx = target.dx - cx;
+    final ty = target.dy - cy;
+    final distance = math.sqrt(tx * tx + ty * ty);
+    final ax = distance < 1e-6 ? 0.0 : tx / distance;
+    final ay = distance < 1e-6 ? 1.0 : ty / distance;
+    final sx = -ay; // the perpendicular
+    final sy = ax;
 
     // How far the card reaches along the axis, to say how "near" a vertex is.
-    var aMin = double.infinity;
-    var aMax = -double.infinity;
-    for (final corner in quad) {
-      final a = _dot(corner - center, axis);
-      aMin = math.min(aMin, a);
-      aMax = math.max(aMax, a);
-    }
+    final a0 = (tlx - cx) * ax + (tly - cy) * ay;
+    final a1 = (trx - cx) * ax + (try_ - cy) * ay;
+    final a2 = (brx - cx) * ax + (bry - cy) * ay;
+    final a3 = (blx - cx) * ax + (bly - cy) * ay;
+    final aMin = math.min(math.min(a0, a1), math.min(a2, a3));
+    final aMax = math.max(math.max(a0, a1), math.max(a2, a3));
     final range = math.max(aMax - aMin, 1e-6);
     final g = progress.clamp(0.0, 1.0);
+    final reach = g * (1 + lag);
 
+    var i = 0;
     for (var r = 0; r <= n; r++) {
       final v = r / n;
-      final left = Offset.lerp(tl, bl, v)!;
-      final right = Offset.lerp(tr, br, v)!;
+      final lx = tlx + (blx - tlx) * v;
+      final ly = tly + (bly - tly) * v;
+      final rx = trx + (brx - trx) * v;
+      final ry = try_ + (bry - try_) * v;
       for (var c = 0; c <= n; c++) {
-        final point = Offset.lerp(left, right, c / n)!;
-        final rel = point - center;
-        final a = _dot(rel, axis); // along the funnel
-        final l = _dot(rel, side); // across it
+        final u = c / n;
+        final relx = lx + (rx - lx) * u - cx;
+        final rely = ly + (ry - ly) * u - cy;
+        final a = relx * ax + rely * ay; // along the funnel
+        final l = relx * sx + rely * sy; // across it
 
         // 1 at the edge facing the target, 0 at the far edge.
         final near = ((a - aMin) / range).clamp(0.0, 1.0);
         // Each vertex waits for its turn: the near edge starts at once, the
         // far edge after `lag`, and all arrive together at progress 1.
-        final q = (g * (1 + lag) - (1 - near) * lag).clamp(0.0, 1.0);
+        final q = (reach - (1 - near) * lag).clamp(0.0, 1.0);
         final travel = _easeInOutSine(q);
         final squeeze = q * q * (3 - 2 * q); // smoothstep: flat at both ends
 
         final along = a + (distance - a) * travel;
         final across = l * (1 - squeeze);
-
-        final i = (r * stride + c) * 2;
-        final p = center + axis * along + side * across;
-        out[i] = p.dx;
-        out[i + 1] = p.dy;
+        out[i++] = cx + ax * along + sx * across;
+        out[i++] = cy + ay * along + sy * across;
       }
     }
     return out;
@@ -168,8 +175,6 @@ abstract final class SwipeGenie {
     final f = ((progress - 0.82) / 0.18).clamp(0.0, 1.0);
     return 1 - f * f * (3 - 2 * f);
   }
-
-  static double _dot(Offset a, Offset b) => a.dx * b.dx + a.dy * b.dy;
 
   static double _easeInOutSine(double t) => -(math.cos(math.pi * t) - 1) / 2;
 }

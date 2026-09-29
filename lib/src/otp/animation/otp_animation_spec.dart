@@ -2,7 +2,9 @@ import 'package:flutter/animation.dart';
 import 'package:flutter/foundation.dart';
 
 @immutable
+/// Timing, curves and spring settings for the OTP field animations.
 class OtpAnimationSpec {
+  /// Creates a spec. Defaults match the built-in look.
   const OtpAnimationSpec({
     this.entranceDuration = const Duration(milliseconds: 820),
     this.entranceStagger = const Duration(milliseconds: 90),
@@ -25,22 +27,54 @@ class OtpAnimationSpec {
     ),
   });
 
+  /// Length of the entrance animation of a single box.
   final Duration entranceDuration;
+
+  /// Delay between the entrance start of one box and the next.
   final Duration entranceStagger;
+
+  /// Duration of the fill animation when a digit is entered or removed.
   final Duration fillDuration;
+
+  /// Duration of the focus animation of a box (scale and border).
   final Duration focusDuration;
+
+  /// Duration of the collapse into the processing capsule.
   final Duration collapseDuration;
+
+  /// Duration of one pulse cycle while processing.
   final Duration processingPulseDuration;
+
+  /// Duration of the success or failure result animation.
   final Duration resultDuration;
+
+  /// Duration of restoring the boxes after processing (the reverse of the
+  /// collapse).
   final Duration restoreDuration;
+
+  /// How long a delete key must be held before it starts repeating.
   final Duration deleteRepeatInitialDelay;
+
+  /// Interval between repeated deletes while the delete key is held.
   final Duration deleteRepeatInterval;
+
+  /// Curve of the entrance animation.
   final Curve entranceCurve;
+
+  /// Curve of the collapse and restore animation.
   final Curve collapseCurve;
+
+  /// Curve of the processing pulse.
   final Curve processingCurve;
+
+  /// Curve of the result animation.
   final Curve resultCurve;
+
+  /// Spring used by the entrance motion.
   final SpringDescription entranceSpring;
 
+  /// Total entrance time for [length] boxes: [entranceDuration] plus
+  /// [entranceStagger] for each box after the first.
   Duration entranceTimelineFor(int length) {
     if (length <= 1) {
       return entranceDuration;
@@ -49,6 +83,7 @@ class OtpAnimationSpec {
     return entranceDuration + (entranceStagger * (length - 1));
   }
 
+  /// Returns a copy with the given fields replaced.
   OtpAnimationSpec copyWith({
     Duration? entranceDuration,
     Duration? entranceStagger,

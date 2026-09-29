@@ -1,3 +1,5 @@
+// ignore_for_file: public_member_api_docs (internal, not exported)
+
 import 'otp_phase.dart';
 import 'otp_render_model.dart';
 

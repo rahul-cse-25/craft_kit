@@ -1,3 +1,5 @@
+// ignore_for_file: public_member_api_docs (internal, not exported)
+
 import 'package:flutter/foundation.dart';
 
 @immutable

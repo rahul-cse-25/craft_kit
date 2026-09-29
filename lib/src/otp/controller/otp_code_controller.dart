@@ -5,19 +5,42 @@ import '../logic/otp_phase.dart';
 import '../logic/otp_render_model.dart';
 import '../logic/otp_state_machine.dart';
 
+/// Operations an OTP field exposes to an [OtpCodeController] once attached.
 abstract interface class OtpCodeFieldHandle {
+  /// Requests keyboard focus for the field.
   void requestFocus();
+
+  /// Removes keyboard focus from the field.
   void unfocus();
+
+  /// Clears the entered code.
   void clear();
+
+  /// Sets the code, already sanitized to the field length.
   void setCode(String code);
+
+  /// Starts the processing animation.
   void beginProcessing();
+
+  /// Shows the success result.
   void showSuccess();
+
+  /// Shows the success result; completes when its animation has finished.
   Future<void> showSuccessAndWait();
+
+  /// Shows the failure result. When [keepCode] is false the code is cleared.
   void showFailure({bool keepCode = true});
+
+  /// Leaves the processing or result state and returns to editing.
   void restoreEditing();
 }
 
+/// Reads and drives an OTP field from outside the widget.
+///
+/// Calls are forwarded to the attached field. While no field is attached they
+/// only update the controller state and notify listeners.
 class OtpCodeController extends ChangeNotifier {
+  /// Creates a controller. Non-digit characters in [initialCode] are dropped.
   OtpCodeController({String initialCode = ''})
     : _code = _looseSanitize(initialCode);
 
@@ -27,27 +50,36 @@ class OtpCodeController extends ChangeNotifier {
   bool _hasFocus = false;
   int? _length;
 
+  /// Current code, digits only.
   String get code => _code;
 
+  /// Current phase of the field.
   OtpPhase get phase => _phase;
 
+  /// Whether the field currently has focus.
   bool get hasFocus => _hasFocus;
 
+  /// Whether a field is attached to this controller.
   bool get isAttached => _handle != null;
 
+  /// Attaches [handle] as the field this controller drives. Called by the field.
   void attach(OtpCodeFieldHandle handle) {
     _handle = handle;
   }
 
+  /// Detaches [handle] if it is the attached field. Called by the field.
   void detach(OtpCodeFieldHandle handle) {
     if (identical(_handle, handle)) {
       _handle = null;
     }
   }
 
+  /// Returns the current code trimmed to [length] digits, for seeding a field.
   String initialCodeFor(int length) =>
       OtpStateMachine.sanitizeCode(_code, length);
 
+  /// Stores the latest state of the field and notifies listeners. Called by
+  /// the field.
   void updateSnapshot(OtpRenderModel snapshot) {
     _length = snapshot.length;
     _code = snapshot.code;
@@ -84,10 +116,13 @@ class OtpCodeController extends ChangeNotifier {
     super.dispose();
   }
 
+  /// Requests focus for the attached field. Does nothing when detached.
   void requestFocus() => _handle?.requestFocus();
 
+  /// Removes focus from the attached field. Does nothing when detached.
   void unfocus() => _handle?.unfocus();
 
+  /// Clears the code.
   void clear() {
     if (_handle != null) {
       _handle!.clear();
@@ -97,6 +132,8 @@ class OtpCodeController extends ChangeNotifier {
     _applyDetachedCode('');
   }
 
+  /// Sets the code. Non-digits are dropped and the code is cut to the field
+  /// length when known.
   void setCode(String code) {
     final String sanitized = _sanitizeForCurrentLength(code);
     if (_handle != null) {
@@ -107,6 +144,7 @@ class OtpCodeController extends ChangeNotifier {
     _applyDetachedCode(sanitized);
   }
 
+  /// Starts the processing state, for example while verifying the code.
   void beginProcessing() {
     if (_handle != null) {
       _handle!.beginProcessing();
@@ -117,6 +155,7 @@ class OtpCodeController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Shows the success result.
   void showSuccess() {
     if (_handle != null) {
       _handle!.showSuccess();
@@ -142,6 +181,7 @@ class OtpCodeController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Shows the failure result. The code is kept unless [keepCode] is false.
   void showFailure({bool keepCode = true}) {
     if (_handle != null) {
       _handle!.showFailure(keepCode: keepCode);
@@ -155,6 +195,7 @@ class OtpCodeController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Leaves processing or a result and returns to editing.
   void restoreEditing() {
     if (_handle != null) {
       _handle!.restoreEditing();

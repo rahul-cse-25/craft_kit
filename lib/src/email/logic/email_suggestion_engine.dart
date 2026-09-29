@@ -1,13 +1,27 @@
 import '../email_validator.dart';
 import 'remembered_email_entry.dart';
 
-enum EmailSuggestionKind { history, domainCompletion }
+/// Where an email suggestion came from.
+enum EmailSuggestionKind {
+  /// A previously remembered email address.
+  history,
 
+  /// The typed local part completed with a remembered or common domain.
+  domainCompletion,
+}
+
+/// One suggestion offered while the user types an email.
 class EmailSuggestionItem {
+  /// Text shown for the suggestion.
   final String label;
+
+  /// Full email address that replaces the typed text when chosen.
   final String replacementEmail;
+
+  /// Whether this came from history or from a domain completion.
   final EmailSuggestionKind kind;
 
+  /// Creates a suggestion.
   const EmailSuggestionItem({
     required this.label,
     required this.replacementEmail,
@@ -15,6 +29,7 @@ class EmailSuggestionItem {
   });
 }
 
+/// Builds email suggestions from the typed text and remembered emails.
 class EmailSuggestionEngine {
   static const List<String> _defaultCommonDomains = [
     'gmail.com',
@@ -32,7 +47,10 @@ class EmailSuggestionEngine {
     'mail.com',
   ];
 
+  /// Domains offered as completions after the "@", after remembered domains.
   final List<String> commonDomains;
+
+  /// Maximum number of suggestions returned by [suggest].
   final int maxSuggestions;
 
   /// Decides whether the typed text is already a complete email (in which
@@ -46,6 +64,11 @@ class EmailSuggestionEngine {
     this.isValidEmail = EmailValidator.isValid,
   });
 
+  /// Returns suggestions for [rawInput], ranked using [rememberedEmails].
+  ///
+  /// Without an "@" it matches remembered addresses (history); after the "@"
+  /// it completes the domain from remembered and common domains. Returns an
+  /// empty list when the input is blank, malformed or already a valid email.
   List<EmailSuggestionItem> suggest({
     required String rawInput,
     required List<RememberedEmailEntry> rememberedEmails,

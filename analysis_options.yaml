@@ -5,3 +5,9 @@ linter:
     - prefer_single_quotes
     - directives_ordering
     - unawaited_futures
+    - public_member_api_docs
+    - always_declare_return_types
+    - avoid_print
+    - prefer_final_locals
+    - use_super_parameters
+    - sort_child_properties_last

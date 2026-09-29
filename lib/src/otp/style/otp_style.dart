@@ -156,14 +156,32 @@ class OtpStyle {
     );
   }
 
+  /// Width of each digit box, in logical pixels.
   final double boxWidth;
+
+  /// Height of each digit box, in logical pixels.
   final double boxHeight;
+
+  /// Space between neighboring boxes, in logical pixels.
   final double gap;
+
+  /// Corner radius of an empty box.
   final double idleRadius;
+
+  /// Corner radius of a box holding a digit.
   final double filledRadius;
+
+  /// Border width of an unfocused box.
   final double borderWidth;
+
+  /// Border width of the focused box.
   final double focusedBorderWidth;
+
+  /// Scale applied to the focused box (1 means no scaling).
   final double focusScale;
+
+  /// Width multiplier for the processing capsule relative to a box. Not
+  /// currently read by the widgets.
   final double processingWidthFactor;
 
   /// Extra height added around the boxes for the entrance motion and the
@@ -172,25 +190,62 @@ class OtpStyle {
 
   /// Look of the success and failure glow. See [OtpResultGlow].
   final OtpResultGlow resultGlow;
+
+  /// Fill color of an empty box.
   final Color backgroundColor;
+
+  /// Fill color of a box holding a digit.
   final Color filledBackgroundColor;
+
+  /// Border color of an empty, unfocused box.
   final Color borderColor;
+
+  /// Border color of the focused box.
   final Color focusedBorderColor;
+
+  /// Border color of a box holding a digit.
   final Color filledBorderColor;
+
+  /// Border color when the result is success.
   final Color successBorderColor;
+
+  /// Border color when the result is failure.
   final Color errorBorderColor;
+
+  /// Color of the digits.
   final Color textColor;
+
+  /// Color of the dots shown while processing.
   final Color processingDotColor;
+
+  /// Color of the track behind the processing dots.
   final Color processingTrackColor;
+
+  /// Color of the highlight flash while processing.
   final Color processingHighlightColor;
+
+  /// Color of the capsule outline while processing.
   final Color processingOutlineColor;
+
+  /// Gradient of the processing capsule.
   final LinearGradient processingGradient;
+
+  /// Gradient of the success result.
   final LinearGradient successGradient;
+
+  /// Gradient of the failure result.
   final LinearGradient failureGradient;
+
+  /// Glow color of the result under [OtpResultGlow.classic].
   final Color glowColor;
+
+  /// Color of the success and failure icon.
   final Color resultIconColor;
+
+  /// Text style of the digits.
   final TextStyle textStyle;
 
+  /// Returns a copy with the given fields replaced.
   OtpStyle copyWith({
     double? boxWidth,
     double? boxHeight,
