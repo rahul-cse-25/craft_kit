@@ -28,7 +28,7 @@
     one after another. Returning cards keep moving when another is placed above
     them, so quick undos never jump.
   * `SwipeConsumeEffect.genie` (with `SwipeTarget.genieLag`): a consumed card
-    pours into its target like the macOS Dock minimize effect, and back out on
+    funnels into the centre point of its target like the macOS Dock minimize effect, and back out on
     undo. Pictures kept for undoing are bounded and always released.
   * A card keeps its state as it moves from the back of the stack to the top
     and out, and a swipe rebuilds only the cards whose role changed.

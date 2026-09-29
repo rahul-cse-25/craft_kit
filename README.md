@@ -150,8 +150,8 @@ previous card back in its place. Any behavior can take a `guard` to refuse an
 item, and `onCommit`.
 
 **Genie.** `SwipeTarget(effect: SwipeConsumeEffect.genie)` makes a consumed
-card pour into its target like the macOS Dock minimize effect: the part nearest
-the target narrows into it first and the rest follows, warping the card's own
+card pour into its target like the macOS Dock minimize effect: the whole card funnels along the line from its centre to the target's centre point, the part nearest
+that point narrowing first and the rest following in one smooth curve, warping the card's own
 picture. Undoing it pours the card back out of the button. `genieLag` sets the
 length of the funnel. (`shrink`, the default, is a plain shrinking flight.)
 

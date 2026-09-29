@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart'
@@ -298,7 +299,6 @@ class _GenieRun {
     required this.image,
     required this.quad,
     required this.target,
-    required this.targetSize,
     required this.lag,
   }) : shader = ui.ImageShader(
          image,
@@ -306,15 +306,30 @@ class _GenieRun {
          TileMode.clamp,
          Matrix4.identity().storage,
          filterQuality: FilterQuality.medium,
-       );
+       ),
+       topology = SwipeGenie.topology() {
+    // The mesh's texture coordinates in pixels of the picture. They never
+    // change, so they are worked out once, not on every frame.
+    final fractions = topology.uvs;
+    final w = image.width.toDouble();
+    final h = image.height.toDouble();
+    textureCoordinates = Float32List(fractions.length);
+    for (var i = 0; i < fractions.length; i += 2) {
+      textureCoordinates[i] = fractions[i] * w;
+      textureCoordinates[i + 1] = fractions[i + 1] * h;
+    }
+  }
 
   final ui.Image image;
   final ui.ImageShader shader;
+  final GenieTopology topology;
+  late final Float32List textureCoordinates;
 
   /// The card's corners in stack coordinates.
   final List<Offset> quad;
+
+  /// The point the card pours into.
   final Offset target;
-  final Size targetSize;
   final double lag;
 
   /// 0: the card as it was; 1: all of it in the target.
@@ -412,21 +427,18 @@ class _GeniePainter extends CustomPainter {
     final alpha = SwipeGenie.opacity(g);
     if (alpha <= 0) return;
 
-    final mesh = SwipeGenie.mesh(
-      quad: run.quad,
-      target: run.target,
-      targetSize: run.targetSize,
-      progress: g,
-      lag: run.lag,
-    );
-    final w = run.image.width.toDouble();
-    final h = run.image.height.toDouble();
-    final vertices = ui.Vertices(
-      ui.VertexMode.triangleStrip,
-      mesh.positions,
-      textureCoordinates: <Offset>[
-        for (final uv in mesh.uvs) Offset(uv.dx * w, uv.dy * h),
-      ],
+    // Only the vertex positions change from frame to frame; how they connect
+    // and which part of the picture each shows are fixed.
+    final vertices = ui.Vertices.raw(
+      ui.VertexMode.triangles,
+      SwipeGenie.positions(
+        quad: run.quad,
+        target: run.target,
+        progress: g,
+        lag: run.lag,
+      ),
+      textureCoordinates: run.textureCoordinates,
+      indices: run.topology.indices,
     );
     final paint =
         Paint()
@@ -1183,7 +1195,6 @@ class _SwipeCardStackState<T> extends State<SwipeCardStack<T>>
                 _stackMatrix(geometry.cardRect, start, slot),
               ),
               target: point,
-              targetSize: local.size,
               lag: target.genieLag,
             );
           }
@@ -1441,7 +1452,6 @@ class _SwipeCardStackState<T> extends State<SwipeCardStack<T>>
             rest.bottomLeft,
           ],
           target: _pointIn(local, target.alignment),
-          targetSize: local.size,
           lag: target.genieLag,
         );
         genie.progress.value = genieFrom;
