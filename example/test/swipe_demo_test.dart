@@ -103,11 +103,13 @@ void main() {
       expect(find.text('Coral'), findsOneWidget); // sprang back
       expect(find.textContaining('1 super'), findsOneWidget);
 
-      // Down: sent to the end of the deck, so it is not the top card any more.
+      // Down: brings the previous card back. The last one to leave was Bolt
+      // (consumed into the like button), so it pours back out on top of Coral.
       await tester.drag(find.text('Coral'), const Offset(0, 260));
       await settle(tester);
-      expect(find.textContaining('Coral · skip'), findsOneWidget);
-      expect(find.text('Dune'), findsWidgets);
+      expect(find.textContaining('undo Bolt'), findsOneWidget);
+      expect(find.text('Bolt'), findsOneWidget); // it is back
+      expect(find.text('Coral'), findsOneWidget); // and Coral stayed
     });
 
     testWidgets('the buttons do the same through the controller', (
@@ -375,6 +377,115 @@ void main() {
     });
   });
 
+  group('rewind, undo and the genie in the demo', () {
+    testWidgets('the rewind button brings every card back, in order', (
+      tester,
+    ) async {
+      await openSwipeTab(tester);
+      for (var i = 0; i < 3; i++) {
+        await tester.tap(find.byTooltip('Nope'));
+        await settle(tester);
+      }
+      expect(find.text('Aurora'), findsNothing);
+      expect(find.text('Dune'), findsWidgets);
+
+      await tester.tap(find.byTooltip('Rewind all'));
+      await settle(tester);
+
+      expect(find.text('Aurora'), findsOneWidget);
+      expect(find.text('Bolt'), findsOneWidget);
+      expect(find.text('Coral'), findsOneWidget);
+      // With nothing left to undo the button is off.
+      final rewind = tester.widget<IconButton>(
+        find
+            .ancestor(
+              of: find.byIcon(Icons.fast_rewind),
+              matching: find.byType(IconButton),
+            )
+            .first,
+      );
+      expect(rewind.onPressed, isNull);
+    });
+
+    testWidgets('dragging down with nothing to bring back just springs back', (
+      tester,
+    ) async {
+      await openSwipeTab(tester);
+      await tester.drag(find.text('Aurora'), const Offset(0, 260));
+      await settle(tester);
+      expect(find.text('Aurora'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Down can be switched between undo and send to back', (
+      tester,
+    ) async {
+      await openSwipeTab(tester);
+      await openPanel(tester, expand: true);
+      await chooseAction(
+        tester,
+        SwipeDirection.down,
+        DirectionAction.sendToBack,
+      );
+      await closePanel(tester);
+
+      // Sent to the back: the button is now "Skip" and the card leaves.
+      expect(find.byTooltip('Skip'), findsOneWidget);
+      await tester.drag(find.text('Aurora'), const Offset(0, 260));
+      await settle(tester);
+      expect(find.textContaining('Aurora · skip'), findsOneWidget);
+    });
+
+    testWidgets('the undo action is offered for every direction', (
+      tester,
+    ) async {
+      await openSwipeTab(tester);
+      await openPanel(tester, expand: true);
+      // Make Up bring the previous card back instead.
+      await chooseAction(tester, SwipeDirection.up, DirectionAction.undo);
+      await closePanel(tester);
+
+      await tester.tap(find.byTooltip('Nope'));
+      await settle(tester);
+      await tester.drag(find.text('Bolt'), const Offset(0, -260));
+      await settle(tester);
+      expect(find.text('Aurora'), findsOneWidget); // it came back
+    });
+
+    testWidgets('the genie can be switched off in the control center', (
+      tester,
+    ) async {
+      await openSwipeTab(tester);
+      await openPanel(tester, expand: true);
+      final effect = find.byKey(const ValueKey<String>('consume-effect'));
+      await reveal(tester, effect);
+      await tester.tap(
+        find.descendant(of: effect, matching: find.text('shrink')),
+      );
+      await tester.pumpAndSettle();
+      await closePanel(tester);
+
+      await tester.drag(find.text('Aurora'), const Offset(260, 0));
+      await settle(tester);
+      expect(find.textContaining('Aurora · like'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a genie swipe and its undo work from the buttons', (
+      tester,
+    ) async {
+      await openSwipeTab(tester); // genie is the default for Like
+      await tester.tap(find.byTooltip('Like'));
+      await settle(tester);
+      expect(find.text('Aurora'), findsNothing);
+
+      await tester.tap(find.byTooltip('Undo'));
+      await settle(tester);
+      expect(find.text('Aurora'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   group('SwipeLabSettings', () {
     test('defaults match the smooth preset and the demo behaviors', () {
       final s = SwipeLabSettings();
@@ -385,6 +496,29 @@ void main() {
       expect(s.layout.visibleCards, 3);
       expect(s.haptics.thresholdCrossed, SwipeHapticType.selectionClick);
     });
+
+    test(
+      'Down brings the previous card back by default, and the genie is on',
+      () {
+        final s = SwipeLabSettings();
+        expect(s.actions[SwipeDirection.down], DirectionAction.undo);
+        expect(DirectionAction.undo.label, contains('bring back'));
+        expect(s.consumeEffect, SwipeConsumeEffect.genie);
+        expect(s.genieLag, 0.45);
+        expect(s.rewindStagger, 90);
+
+        s
+          ..change(() {
+            s.consumeEffect = SwipeConsumeEffect.shrink;
+            s.rewindStagger = 10;
+            s.actions[SwipeDirection.down] = DirectionAction.off;
+          })
+          ..resetAll();
+        expect(s.consumeEffect, SwipeConsumeEffect.genie);
+        expect(s.rewindStagger, 90);
+        expect(s.actions[SwipeDirection.down], DirectionAction.undo);
+      },
+    );
 
     test('loading a preset replaces every spring', () {
       final s = SwipeLabSettings()..loadPreset('bouncy');

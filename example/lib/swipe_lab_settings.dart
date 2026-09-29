@@ -2,7 +2,7 @@ import 'package:craft_kit/craft_kit.dart';
 import 'package:flutter/foundation.dart';
 
 /// What a direction does in the swipe lab. `off` means no behavior at all.
-enum DirectionAction { off, dismiss, consume, springBack, sendToBack }
+enum DirectionAction { off, dismiss, consume, springBack, sendToBack, undo }
 
 /// A label for a [DirectionAction].
 extension DirectionActionLabel on DirectionAction {
@@ -13,6 +13,7 @@ extension DirectionActionLabel on DirectionAction {
     DirectionAction.consume => 'consume into button',
     DirectionAction.springBack => 'spring back (task)',
     DirectionAction.sendToBack => 'send to back',
+    DirectionAction.undo => 'undo (bring back previous)',
   };
 }
 
@@ -54,7 +55,7 @@ class SwipeLabSettings extends ChangeNotifier {
         SwipeDirection.left: DirectionAction.dismiss,
         SwipeDirection.right: DirectionAction.consume,
         SwipeDirection.up: DirectionAction.springBack,
-        SwipeDirection.down: DirectionAction.sendToBack,
+        SwipeDirection.down: DirectionAction.undo,
       };
 
   /// Directions whose swipes are refused for the card named Coral (a guard).
@@ -62,6 +63,8 @@ class SwipeLabSettings extends ChangeNotifier {
   double consumeEndScale = 0.08;
   double consumeArc = 0.2;
   bool consumeFade = true;
+  SwipeConsumeEffect consumeEffect = SwipeConsumeEffect.genie;
+  double genieLag = 0.45;
 
   // ---- input and feedback ----
   bool enabled = true;
@@ -77,6 +80,9 @@ class SwipeLabSettings extends ChangeNotifier {
   bool infinite = false;
   int needMoreThreshold = 3;
   int preloadCount = 2;
+
+  /// Pause, in milliseconds, between cards of a rewind.
+  int rewindStagger = 90;
 
   /// Bumped to make the demo rebuild its deck.
   int deckVersion = 0;
@@ -146,11 +152,14 @@ class SwipeLabSettings extends ChangeNotifier {
       ..[SwipeDirection.left] = DirectionAction.dismiss
       ..[SwipeDirection.right] = DirectionAction.consume
       ..[SwipeDirection.up] = DirectionAction.springBack
-      ..[SwipeDirection.down] = DirectionAction.sendToBack;
+      ..[SwipeDirection.down] = DirectionAction.undo;
     refusing.clear();
     consumeEndScale = 0.08;
     consumeArc = 0.2;
     consumeFade = true;
+    consumeEffect = SwipeConsumeEffect.genie;
+    genieLag = 0.45;
+    rewindStagger = 90;
     enabled = true;
     keyboard = true;
     reduceMotion = false;

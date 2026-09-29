@@ -130,7 +130,7 @@ SizedBox(
       SwipeDirection.up: SwipeBehavior.springBack(  // run a task, stay in deck
         onCommit: (event) => superLike(event.item),
       ),
-      SwipeDirection.down: SwipeBehavior.sendToBack(),
+      SwipeDirection.down: SwipeBehavior.undo(),    // bring the previous card back
     },
     overlayBuilder: (context, progress) => Stamps(progress), // LIKE / NOPE ...
     onSwipe: (event) => log(event.item, event.direction, event.outcome),
@@ -138,14 +138,27 @@ SizedBox(
 );
 
 controller.swipe(SwipeDirection.right); // from a button: same behavior
-controller.undo();
+controller.undo();                      // the last swiped card comes back
+controller.rewind();                    // all of them, one after another
 ```
 
-**Behaviors** (`SwipeOutcome`): `dismiss` flies off; `consume` shrinks along a
-curve into a `SwipeTarget` (falls back to `dismiss` if the target is not on
-screen); `springBack` runs your callback and returns the card to the stack;
-`sendToBack` re-queues it at the end. Any behavior can take a `guard` to refuse
-an item, and `onCommit`.
+**Behaviors** (`SwipeOutcome`): `dismiss` flies off; `consume` flies the card
+into a `SwipeTarget` (falls back to `dismiss` if the target is not on screen);
+`springBack` runs your callback and returns the card to the stack; `sendToBack`
+re-queues it at the end; `undo` springs the dragged card back and brings the
+previous card back in its place. Any behavior can take a `guard` to refuse an
+item, and `onCommit`.
+
+**Genie.** `SwipeTarget(effect: SwipeConsumeEffect.genie)` makes a consumed
+card pour into its target like the macOS Dock minimize effect: the part nearest
+the target narrows into it first and the rest follows, warping the card's own
+picture. Undoing it pours the card back out of the button. `genieLag` sets the
+length of the funnel. (`shrink`, the default, is a plain shrinking flight.)
+
+**Rewind and undo.** Cards can be coming back while others are already on
+top of them, so `rewind()` (optionally `count:` and `stagger:`) and rapid
+undos overlap smoothly instead of jumping. Touching the top card stops a
+rewind.
 
 **Buttons that react.** Wrap the target in `SwipeReaction` to make it swell as a
 card approaches (`state.approach`) and pulse when one arrives

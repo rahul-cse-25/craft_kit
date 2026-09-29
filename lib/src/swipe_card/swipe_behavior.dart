@@ -17,6 +17,23 @@ enum SwipeOutcome {
 
   /// The card flies off and re-enters at the bottom of the deck.
   sendToBack,
+
+  /// The card springs back onto the stack and the card that was swiped away
+  /// before it comes back in its place (like pressing undo). With nothing to
+  /// bring back, the card simply springs back.
+  undo,
+}
+
+/// How a consumed card reaches its [SwipeTarget].
+enum SwipeConsumeEffect {
+  /// The card shrinks and fades along a curve into the target.
+  shrink,
+
+  /// The card pours into the target like the macOS Dock "genie" minimize
+  /// effect: the part nearest the target narrows into it first and the rest
+  /// follows. Undoing it pours the card back out. Falls back to [shrink] if
+  /// the card cannot be captured.
+  genie,
 }
 
 /// A place a card can be consumed into.
@@ -33,6 +50,8 @@ class SwipeTarget {
     this.endScale = 0.08,
     this.arc = 0.2,
     this.fade = true,
+    this.effect = SwipeConsumeEffect.shrink,
+    this.genieLag = 0.45,
   }) : rect = null;
 
   /// Targets a rectangle, in global coordinates, computed on demand.
@@ -42,7 +61,17 @@ class SwipeTarget {
     this.endScale = 0.08,
     this.arc = 0.2,
     this.fade = true,
+    this.effect = SwipeConsumeEffect.shrink,
+    this.genieLag = 0.45,
   }) : key = null;
+
+  /// How the card reaches the target. See [SwipeConsumeEffect].
+  final SwipeConsumeEffect effect;
+
+  /// For [SwipeConsumeEffect.genie]: how far the far edge of the card trails
+  /// the near edge, from 0 (the whole card moves together) to 1 (a long
+  /// funnel).
+  final double genieLag;
 
   /// The widget to travel to.
   final GlobalKey? key;
@@ -63,19 +92,22 @@ class SwipeTarget {
   /// Whether the card fades out over the last part of the path.
   final bool fade;
 
+  /// The target's rectangle in global coordinates, or null when it is not on
+  /// screen.
+  Rect? resolveRect() {
+    final rectFn = rect;
+    if (rectFn != null) return rectFn();
+    final render = key?.currentContext?.findRenderObject();
+    if (render is RenderBox && render.attached && render.hasSize) {
+      return render.localToGlobal(Offset.zero) & render.size;
+    }
+    return null;
+  }
+
   /// The point the card travels to, in global coordinates, or null when the
   /// target is not on screen.
   Offset? resolvePoint() {
-    Rect? bounds;
-    final rectFn = rect;
-    if (rectFn != null) {
-      bounds = rectFn();
-    } else {
-      final render = key?.currentContext?.findRenderObject();
-      if (render is RenderBox && render.attached && render.hasSize) {
-        bounds = render.localToGlobal(Offset.zero) & render.size;
-      }
-    }
+    final bounds = resolveRect();
     if (bounds == null) return null;
     return Offset(
       bounds.center.dx + alignment.x * bounds.width / 2,
@@ -156,6 +188,14 @@ class SwipeBehavior<T> {
   /// The card flies off and comes back at the bottom of the deck.
   const SwipeBehavior.sendToBack({this.onCommit, this.guard})
     : outcome = SwipeOutcome.sendToBack,
+      target = null,
+      onArrive = null;
+
+  /// The card springs back and the previously swiped card comes back on top of
+  /// it, exactly like [SwipeCardController.undo]. Nothing happens to the deck
+  /// when there is nothing to bring back.
+  const SwipeBehavior.undo({this.onCommit, this.guard})
+    : outcome = SwipeOutcome.undo,
       target = null,
       onArrive = null;
 

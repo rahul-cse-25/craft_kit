@@ -13,6 +13,9 @@ abstract interface class SwipeHandle {
   /// Brings the last swiped card back.
   void undo();
 
+  /// Brings several swiped cards back, one after another.
+  void rewind(int? count, Duration stagger);
+
   /// Starts the deck over from the items.
   void reset();
 }
@@ -59,6 +62,18 @@ class SwipeCardController {
 
   /// Brings the last swiped card back from where it left.
   void undo() => _handle?.undo();
+
+  /// Brings swiped cards back one after another, most recent first, so the
+  /// deck ends up as it was. [count] limits how many (default: all that can
+  /// be undone) and [stagger] is the pause between cards.
+  ///
+  /// Each card returns the way an undo does, and they overlap: a card keeps
+  /// arriving while the next one is already on its way. Touching the top card
+  /// stops the rewind.
+  void rewind({
+    int? count,
+    Duration stagger = const Duration(milliseconds: 90),
+  }) => _handle?.rewind(count, stagger);
 
   /// Starts the deck over from the stack's items.
   void reset() => _handle?.reset();

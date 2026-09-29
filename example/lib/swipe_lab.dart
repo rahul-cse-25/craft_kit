@@ -139,6 +139,8 @@ class _SwipeDemoState extends State<SwipeDemo> {
             endScale: _s.consumeEndScale,
             arc: _s.consumeArc,
             fade: _s.consumeFade,
+            effect: _s.consumeEffect,
+            genieLag: _s.genieLag,
           ),
           guard: guard,
         ),
@@ -148,6 +150,7 @@ class _SwipeDemoState extends State<SwipeDemo> {
         DirectionAction.sendToBack => SwipeBehavior<Profile>.sendToBack(
           guard: guard,
         ),
+        DirectionAction.undo => SwipeBehavior<Profile>.undo(guard: guard),
         DirectionAction.off => throw StateError('unreachable'),
       };
     }
@@ -155,13 +158,22 @@ class _SwipeDemoState extends State<SwipeDemo> {
   }
 
   String _describe(SwipeEvent<Profile> e) =>
-      '${e.item.name} · ${_labels[e.direction]}';
+      '${e.item.name} · ${_word(e.direction)}';
+
+  /// The word for a direction, which depends on what it does now.
+  String _word(SwipeDirection d) {
+    if (d == SwipeDirection.down && _s.actions[d] == DirectionAction.undo) {
+      return 'back';
+    }
+    return _labels[d]!;
+  }
 
   void _onSwipe(SwipeEvent<Profile> e) {
     setState(() {
       _last = _describe(e);
       // A trigger never leaves, so it counts at once; others when they land.
-      if (e.outcome == SwipeOutcome.springBack) {
+      if (e.outcome == SwipeOutcome.springBack ||
+          e.outcome == SwipeOutcome.undo) {
         _counts[e.direction] = _counts[e.direction]! + 1;
       }
     });
@@ -262,6 +274,7 @@ class _SwipeDemoState extends State<SwipeDemo> {
                 targets: _targets,
                 counts: _counts,
                 actions: _s.actions,
+                rewindStagger: _s.rewindStagger,
               ),
             ],
           ),
@@ -279,7 +292,15 @@ class _SwipeDemoState extends State<SwipeDemo> {
         _Stamp('LIKE', Colors.green, Alignment.topLeft, progress.right, -0.25),
         _Stamp('NOPE', Colors.red, Alignment.topRight, progress.left, 0.25),
         _Stamp('SUPER', Colors.blue, Alignment.bottomCenter, progress.up, 0),
-        _Stamp('SKIP', Colors.amber, Alignment.topCenter, progress.down, 0),
+        _Stamp(
+          _s.actions[SwipeDirection.down] == DirectionAction.undo
+              ? 'BACK'
+              : 'SKIP',
+          Colors.amber,
+          Alignment.topCenter,
+          progress.down,
+          0,
+        ),
       ],
     );
   }
@@ -391,12 +412,16 @@ class _Actions extends StatelessWidget {
     required this.targets,
     required this.counts,
     required this.actions,
+    required this.rewindStagger,
   });
 
   final SwipeCardController controller;
   final Map<SwipeDirection, GlobalKey> targets;
   final Map<SwipeDirection, int> counts;
   final Map<SwipeDirection, DirectionAction> actions;
+
+  /// Pause between cards of a rewind, in milliseconds.
+  final int rewindStagger;
 
   Widget _button(SwipeDirection d, IconData icon, String tooltip, Color color) {
     final enabled = actions[d] != DirectionAction.off;
@@ -430,7 +455,9 @@ class _Actions extends StatelessWidget {
         _button(
           SwipeDirection.down,
           Icons.arrow_downward,
-          'Skip',
+          actions[SwipeDirection.down] == DirectionAction.undo
+              ? 'Back'
+              : 'Skip',
           Colors.amber.shade800,
         ),
         ValueListenableBuilder<bool>(
@@ -439,6 +466,19 @@ class _Actions extends StatelessWidget {
             tooltip: 'Undo',
             onPressed: canUndo ? controller.undo : null,
             icon: const Icon(Icons.undo),
+          ),
+        ),
+        // Brings every swiped card back, one after another.
+        ValueListenableBuilder<bool>(
+          valueListenable: controller.undoAvailable,
+          builder: (context, canUndo, _) => IconButton.outlined(
+            tooltip: 'Rewind all',
+            onPressed: canUndo
+                ? () => controller.rewind(
+                    stagger: Duration(milliseconds: rewindStagger),
+                  )
+                : null,
+            icon: const Icon(Icons.fast_rewind),
           ),
         ),
         _button(SwipeDirection.up, Icons.star, 'Super', Colors.blue),
@@ -513,7 +553,7 @@ class SwipeControlCenter extends StatelessWidget {
                   _SpringsSection(settings: settings),
                   _LayoutSection(settings: settings),
                   _InputSection(settings: settings),
-                  _DeckSection(settings: settings),
+                  _DeckSection(settings: settings, controller: controller),
                   _LogSection(settings: settings),
                   const SizedBox(height: 32),
                 ]),
@@ -852,6 +892,33 @@ class _DirectionsSection extends StatelessWidget {
           value: settings.consumeFade,
           onChanged: (v) => settings.change(() => settings.consumeFade = v),
         ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SegmentedButton<SwipeConsumeEffect>(
+            key: const ValueKey<String>('consume-effect'),
+            showSelectedIcon: false,
+            segments: const <ButtonSegment<SwipeConsumeEffect>>[
+              ButtonSegment<SwipeConsumeEffect>(
+                value: SwipeConsumeEffect.shrink,
+                label: Text('shrink'),
+              ),
+              ButtonSegment<SwipeConsumeEffect>(
+                value: SwipeConsumeEffect.genie,
+                label: Text('genie'),
+              ),
+            ],
+            selected: <SwipeConsumeEffect>{settings.consumeEffect},
+            onSelectionChanged: (s) =>
+                settings.change(() => settings.consumeEffect = s.first),
+          ),
+        ),
+        _SliderTile(
+          label: 'Genie: funnel length',
+          value: settings.genieLag,
+          min: 0,
+          max: 0.9,
+          onChanged: (v) => settings.change(() => settings.genieLag = v),
+        ),
       ],
     );
   }
@@ -1154,9 +1221,10 @@ class _InputSection extends StatelessWidget {
 }
 
 class _DeckSection extends StatelessWidget {
-  const _DeckSection({required this.settings});
+  const _DeckSection({required this.settings, required this.controller});
 
   final SwipeLabSettings settings;
+  final SwipeCardController controller;
 
   @override
   Widget build(BuildContext context) {
@@ -1208,6 +1276,33 @@ class _DeckSection extends StatelessWidget {
           divisions: 6,
           decimals: 0,
           onChanged: (v) => s.change(() => s.preloadCount = v.round()),
+        ),
+        _SliderTile(
+          label: 'Rewind pause',
+          value: s.rewindStagger.toDouble(),
+          min: 0,
+          max: 400,
+          decimals: 0,
+          suffix: ' ms',
+          onChanged: (v) => s.change(() => s.rewindStagger = v.round()),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: ValueListenableBuilder<bool>(
+              valueListenable: controller.undoAvailable,
+              builder: (context, canUndo, _) => FilledButton.tonalIcon(
+                onPressed: canUndo
+                    ? () => controller.rewind(
+                        stagger: Duration(milliseconds: s.rewindStagger),
+                      )
+                    : null,
+                icon: const Icon(Icons.fast_rewind),
+                label: const Text('Rewind all'),
+              ),
+            ),
+          ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
