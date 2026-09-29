@@ -40,12 +40,10 @@ class OtpProcessingBoxView extends StatelessWidget {
     final double pulse = animationSpec.processingCurve.transform(
       (0.5 + (math.sin(processingValue * math.pi * 2) * 0.5)).clamp(0.0, 1.0),
     );
-    final double successScale = phase == OtpPhase.success
-        ? 0.98 + (resultValue * 0.10)
-        : 1;
-    final double failureScale = phase == OtpPhase.failure
-        ? 1 + ((1 - resultValue) * 0.015)
-        : 1;
+    final double successScale =
+        phase == OtpPhase.success ? 0.98 + (resultValue * 0.10) : 1;
+    final double failureScale =
+        phase == OtpPhase.failure ? 1 + ((1 - resultValue) * 0.015) : 1;
     final double processingScale = switch (phase) {
       OtpPhase.processing ||
       OtpPhase.collapsing ||
@@ -57,9 +55,20 @@ class OtpProcessingBoxView extends StatelessWidget {
       OtpPhase.failure => style.failureGradient,
       _ => style.processingGradient,
     };
+    final bool followGradient =
+        style.resultGlow == OtpResultGlow.followGradient;
+    // Classic (the default) keeps one glow color and softer result glow;
+    // followGradient tints the result glow with the gradient's middle color.
+    final Color phaseGlowColor = switch (phase) {
+      OtpPhase.success || OtpPhase.failure when followGradient =>
+        gradient.colors[gradient.colors.length ~/ 2],
+      _ => style.glowColor,
+    };
     final double glowOpacity = switch (phase) {
-      OtpPhase.success => 0.28 + (resultValue * 0.12),
-      OtpPhase.failure => 0.18 + ((1 - resultValue) * 0.08),
+      OtpPhase.success => (followGradient ? 0.34 : 0.28) + (resultValue * 0.12),
+      OtpPhase.failure =>
+        (followGradient ? 0.28 : 0.18) +
+            ((1 - resultValue) * (followGradient ? 0.10 : 0.08)),
       _ => 0.18 + (pulse * 0.22),
     };
     final double outlineOpacity = switch (phase) {
@@ -114,7 +123,7 @@ class OtpProcessingBoxView extends StatelessWidget {
                         borderRadius: BorderRadius.circular(borderRadius + 8),
                         boxShadow: <BoxShadow>[
                           BoxShadow(
-                            color: style.glowColor.withValues(
+                            color: phaseGlowColor.withValues(
                               alpha: glowOpacity,
                             ),
                             blurRadius: 26 + (pulse * 20),
@@ -177,12 +186,14 @@ class OtpProcessingBoxView extends StatelessWidget {
           icon: Icons.check_rounded,
           iconColor: style.resultIconColor,
           progress: resultValue,
+          tintedShadow: style.resultGlow == OtpResultGlow.followGradient,
         );
       case OtpPhase.failure:
         return OtpResultGlyph(
           icon: Icons.close_rounded,
           iconColor: style.resultIconColor,
           progress: resultValue,
+          tintedShadow: style.resultGlow == OtpResultGlow.followGradient,
         );
       default:
         return OtpCircularLoader(
@@ -274,46 +285,57 @@ class OtpFlowBorderPainter extends CustomPainter {
     final Color tailColor = _sampleGradientColor(0.82);
     final Color seamColor = _sampleGradientColor(0.04);
 
-    final Paint outlinePaint = Paint()
-      ..color = outlineColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
+    final Paint outlinePaint =
+        Paint()
+          ..color = outlineColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.0;
 
-    final Paint borderPaint = Paint()
-      ..shader = SweepGradient(
-        colors: <Color>[seamColor, midColor, tailColor, leadColor, seamColor],
-        stops: const <double>[0.0, 0.34, 0.66, 0.88, 1.0],
-      ).createShader(rect)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+    final Paint borderPaint =
+        Paint()
+          ..shader = SweepGradient(
+            colors: <Color>[
+              seamColor,
+              midColor,
+              tailColor,
+              leadColor,
+              seamColor,
+            ],
+            stops: const <double>[0.0, 0.34, 0.66, 0.88, 1.0],
+          ).createShader(rect)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round;
 
-    final List<Color> glowColors = isAnimated
-        ? <Color>[
-            Colors.transparent,
-            flashColor.withValues(alpha: 0.22),
-            flashColor,
-            flashColor.withValues(alpha: 0.14),
-            Colors.transparent,
-          ]
-        : <Color>[
-            Colors.transparent,
-            flashColor.withValues(alpha: 0.18),
-            flashColor,
-            Colors.transparent,
-          ];
-    final List<double> glowStops = isAnimated
-        ? const <double>[0.0, 0.10, 0.18, 0.28, 1.0]
-        : const <double>[0.0, 0.26, 0.50, 1.0];
+    final List<Color> glowColors =
+        isAnimated
+            ? <Color>[
+              Colors.transparent,
+              flashColor.withValues(alpha: 0.22),
+              flashColor,
+              flashColor.withValues(alpha: 0.14),
+              Colors.transparent,
+            ]
+            : <Color>[
+              Colors.transparent,
+              flashColor.withValues(alpha: 0.18),
+              flashColor,
+              Colors.transparent,
+            ];
+    final List<double> glowStops =
+        isAnimated
+            ? const <double>[0.0, 0.10, 0.18, 0.28, 1.0]
+            : const <double>[0.0, 0.26, 0.50, 1.0];
 
-    final Paint glowPaint = Paint()
-      ..shader = SweepGradient(
-        colors: glowColors,
-        stops: glowStops,
-      ).createShader(rect)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth + 0.4
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7);
+    final Paint glowPaint =
+        Paint()
+          ..shader = SweepGradient(
+            colors: glowColors,
+            stops: glowStops,
+          ).createShader(rect)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth + 0.4
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7);
 
     canvas.drawRRect(border, outlinePaint);
     canvas.drawRRect(border, borderPaint);
@@ -344,9 +366,10 @@ class OtpFlowBorderPainter extends CustomPainter {
         continue;
       }
 
-      final double segmentT = end == start
-          ? 0.0
-          : ((clampedT - start) / (end - start)).clamp(0.0, 1.0);
+      final double segmentT =
+          end == start
+              ? 0.0
+              : ((clampedT - start) / (end - start)).clamp(0.0, 1.0);
       return Color.lerp(colors[index], colors[index + 1], segmentT) ??
           colors[index];
     }
@@ -379,27 +402,29 @@ class OtpCircularLoaderPainter extends CustomPainter {
     final Rect rect = Offset.zero & size;
     final Rect arcRect = rect.deflate(strokeWidth / 2);
 
-    final Paint trackPaint = Paint()
-      ..color = trackColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+    final Paint trackPaint =
+        Paint()
+          ..color = trackColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round;
 
-    final Paint progressPaint = Paint()
-      ..shader = SweepGradient(
-        startAngle: -math.pi / 2,
-        endAngle: (math.pi * 3) / 2,
-        colors: <Color>[
-          color.withValues(alpha: 0.0),
-          color.withValues(alpha: 0.24),
-          color,
-          color.withValues(alpha: 0.10),
-        ],
-        stops: const <double>[0.0, 0.26, 0.72, 1.0],
-      ).createShader(rect)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+    final Paint progressPaint =
+        Paint()
+          ..shader = SweepGradient(
+            startAngle: -math.pi / 2,
+            endAngle: (math.pi * 3) / 2,
+            colors: <Color>[
+              color.withValues(alpha: 0.0),
+              color.withValues(alpha: 0.24),
+              color,
+              color.withValues(alpha: 0.10),
+            ],
+            stops: const <double>[0.0, 0.26, 0.72, 1.0],
+          ).createShader(rect)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round;
 
     canvas.drawArc(arcRect, 0, math.pi * 2, false, trackPaint);
     canvas.drawArc(arcRect, -math.pi / 2, math.pi * 1.58, false, progressPaint);
@@ -417,11 +442,15 @@ class OtpResultGlyph extends StatelessWidget {
     required this.icon,
     required this.iconColor,
     required this.progress,
+    this.tintedShadow = false,
   });
 
   final IconData icon;
   final Color iconColor;
   final double progress;
+
+  /// Shadow uses [iconColor] instead of white.
+  final bool tintedShadow;
 
   @override
   Widget build(BuildContext context) {
@@ -433,7 +462,10 @@ class OtpResultGlyph extends StatelessWidget {
         color: iconColor,
         size: icon == Icons.check_rounded ? 28 : 26,
         shadows: <Shadow>[
-          Shadow(color: Colors.white.withValues(alpha: 0.20), blurRadius: 12),
+          if (tintedShadow)
+            Shadow(color: iconColor.withValues(alpha: 0.34), blurRadius: 10)
+          else
+            Shadow(color: Colors.white.withValues(alpha: 0.20), blurRadius: 12),
         ],
       ),
     );

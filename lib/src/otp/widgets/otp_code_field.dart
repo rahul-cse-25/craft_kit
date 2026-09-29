@@ -565,6 +565,11 @@ class _OtpCodeFieldState extends State<OtpCodeField>
 
   @override
   void showSuccess() {
+    unawaited(showSuccessAndWait());
+  }
+
+  @override
+  Future<void> showSuccessAndWait() async {
     if (_stateMachine.state.code.isEmpty) {
       return;
     }
@@ -573,7 +578,7 @@ class _OtpCodeFieldState extends State<OtpCodeField>
     _stopDeleteLoop();
     _focusNode.unfocus();
     final int token = ++_transitionToken;
-    unawaited(_runSuccess(token));
+    await _runSuccess(token);
   }
 
   Future<void> _runSuccess(int token) async {
@@ -704,27 +709,28 @@ class _OtpCodeFieldState extends State<OtpCodeField>
           focused: _stateMachine.state.hasFocus,
           label: widget.semanticsLabel ?? widget.labels.inputLabel,
           value: semanticsValue,
-          hint: _stateMachine.state.code.isNotEmpty
-              ? widget.labels.filledHint
-              : widget.labels.emptyHint,
+          hint:
+              _stateMachine.state.code.isNotEmpty
+                  ? widget.labels.filledHint
+                  : widget.labels.emptyHint,
           child: Focus(
             canRequestFocus: false,
             onKeyEvent: _handleKeyEvent,
             child: MouseRegion(
-              cursor: widget.enabled && !_stateMachine.state.phase.isBusy
-                  ? SystemMouseCursors.text
-                  : SystemMouseCursors.basic,
+              cursor:
+                  widget.enabled && !_stateMachine.state.phase.isBusy
+                      ? SystemMouseCursors.text
+                      : SystemMouseCursors.basic,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: widget.enabled && !_stateMachine.state.phase.isBusy
-                    ? _requestFocus
-                    : null,
-                onLongPressStart: _canLoopDelete
-                    ? (_) => _startDeleteLoop()
-                    : null,
-                onLongPressEnd: _canLoopDelete
-                    ? (_) => _stopDeleteLoop()
-                    : null,
+                onTap:
+                    widget.enabled && !_stateMachine.state.phase.isBusy
+                        ? _requestFocus
+                        : null,
+                onLongPressStart:
+                    _canLoopDelete ? (_) => _startDeleteLoop() : null,
+                onLongPressEnd:
+                    _canLoopDelete ? (_) => _stopDeleteLoop() : null,
                 onLongPressCancel: _stopDeleteLoop,
                 child: RepaintBoundary(
                   child: SizedBox(
@@ -818,7 +824,8 @@ class _OtpCodeFieldState extends State<OtpCodeField>
     return (style.boxWidth * widget.length) + (style.gap * (widget.length - 1));
   }
 
-  double _baseCanvasHeight(OtpStyle style) => style.boxHeight + 44;
+  double _baseCanvasHeight(OtpStyle style) =>
+      style.boxHeight + style.canvasVerticalPadding;
 
   double _resolveResponsiveScale({
     required BoxConstraints constraints,
@@ -857,9 +864,10 @@ class _OtpCodeFieldState extends State<OtpCodeField>
       OtpPhase.restoring => collapse.clamp(0.0, 1.0),
       _ => 0.0,
     };
-    final double failureShake = phase == OtpPhase.failure
-        ? math.sin(resultValue * math.pi * 6) * (1 - resultValue) * 10
-        : 0;
+    final double failureShake =
+        phase == OtpPhase.failure
+            ? math.sin(resultValue * math.pi * 6) * (1 - resultValue) * 10
+            : 0;
     final int? focusedIndex = _stateMachine.state.focusedIndex;
     final double spacing = style.boxWidth + style.gap;
     final double center = (widget.length - 1) / 2;

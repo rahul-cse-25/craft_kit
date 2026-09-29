@@ -40,6 +40,7 @@ class StorageRememberedEmailStore implements RememberedEmailStore {
     this.storageKey = 'craft_kit.remembered_emails_v1',
     bool Function(String)? isValidEmail,
     DateTime Function()? clock,
+    this.onCorruptData,
   }) : assert(maxEntries > 0, 'maxEntries must be positive'),
        _isValidEmail = isValidEmail ?? EmailValidator.isValid,
        _clock = clock ?? DateTime.now;
@@ -47,6 +48,10 @@ class StorageRememberedEmailStore implements RememberedEmailStore {
   final CraftStorage _storage;
   final bool Function(String) _isValidEmail;
   final DateTime Function() _clock;
+
+  /// Called when stored data could not be read and was discarded, so an app
+  /// can log it. Loading still succeeds with an empty history.
+  final void Function(Object error, StackTrace stackTrace)? onCorruptData;
 
   /// Maximum number of remembered emails.
   final int maxEntries;
@@ -64,6 +69,10 @@ class StorageRememberedEmailStore implements RememberedEmailStore {
     try {
       final Object? decoded = jsonDecode(raw);
       if (decoded is! List) {
+        onCorruptData?.call(
+          const FormatException('Expected a JSON list of entries'),
+          StackTrace.current,
+        );
         await _storage.remove(storageKey);
         return const <RememberedEmailEntry>[];
       }
@@ -79,20 +88,23 @@ class StorageRememberedEmailStore implements RememberedEmailStore {
 
         final int count = entry.useCount <= 0 ? 1 : entry.useCount;
         final RememberedEmailEntry? existing = merged[entry.email];
-        merged[entry.email] = existing == null
-            ? entry.copyWith(useCount: count)
-            : RememberedEmailEntry(
-                email: entry.email,
-                useCount: existing.useCount + count,
-                lastUsedAtEpochMs:
-                    entry.lastUsedAtEpochMs > existing.lastUsedAtEpochMs
-                    ? entry.lastUsedAtEpochMs
-                    : existing.lastUsedAtEpochMs,
-              );
+        merged[entry.email] =
+            existing == null
+                ? entry.copyWith(useCount: count)
+                : RememberedEmailEntry(
+                  email: entry.email,
+                  useCount: existing.useCount + count,
+                  lastUsedAtEpochMs:
+                      entry.lastUsedAtEpochMs > existing.lastUsedAtEpochMs
+                          ? entry.lastUsedAtEpochMs
+                          : existing.lastUsedAtEpochMs,
+                );
       }
 
       return _sortAndLimit(merged.values.toList());
-    } on FormatException {
+    } on Object catch (error, stackTrace) {
+      // Any failure while decoding means the stored data is unusable.
+      onCorruptData?.call(error, stackTrace);
       await _storage.remove(storageKey);
       return const <RememberedEmailEntry>[];
     }
@@ -119,9 +131,10 @@ class StorageRememberedEmailStore implements RememberedEmailStore {
   Future<void> forgetEmail(String email) async {
     final String normalized = EmailValidator.normalize(email);
     final List<RememberedEmailEntry> entries = await loadEntries();
-    final List<RememberedEmailEntry> remaining = entries
-        .where((RememberedEmailEntry e) => e.email != normalized)
-        .toList();
+    final List<RememberedEmailEntry> remaining =
+        entries
+            .where((RememberedEmailEntry e) => e.email != normalized)
+            .toList();
     if (remaining.length == entries.length) return;
     await _write(remaining);
   }

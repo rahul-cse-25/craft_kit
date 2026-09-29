@@ -12,6 +12,7 @@ abstract interface class OtpCodeFieldHandle {
   void setCode(String code);
   void beginProcessing();
   void showSuccess();
+  Future<void> showSuccessAndWait();
   void showFailure({bool keepCode = true});
   void restoreEditing();
 }
@@ -119,6 +120,21 @@ class OtpCodeController extends ChangeNotifier {
   void showSuccess() {
     if (_handle != null) {
       _handle!.showSuccess();
+      return;
+    }
+
+    _phase = OtpPhase.success;
+    notifyListeners();
+  }
+
+  /// Like [showSuccess], but the returned future completes once the success
+  /// animation has finished, so a caller can wait before navigating away.
+  ///
+  /// It completes immediately when there is nothing to animate (no field is
+  /// attached, or the code is empty).
+  Future<void> showSuccessAndWait() async {
+    if (_handle != null) {
+      await _handle!.showSuccessAndWait();
       return;
     }
 

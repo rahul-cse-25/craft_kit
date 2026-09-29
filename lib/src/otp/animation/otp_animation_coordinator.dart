@@ -55,20 +55,16 @@ class OtpAnimationCoordinator {
   }
 
   double entranceProgressFor(int index) {
-    final double totalMicros = _spec
-        .entranceTimelineFor(_length)
-        .inMicroseconds
-        .toDouble();
-    final double segmentStart = (_spec.entranceStagger * index).inMicroseconds
-        .toDouble();
+    final double totalMicros =
+        _spec.entranceTimelineFor(_length).inMicroseconds.toDouble();
+    final double segmentStart =
+        (_spec.entranceStagger * index).inMicroseconds.toDouble();
     final double segmentEnd =
         segmentStart + _spec.entranceDuration.inMicroseconds.toDouble();
     final double currentTime = entranceController.value * totalMicros;
-    final double rawProgress =
-        ((currentTime - segmentStart) / (segmentEnd - segmentStart)).clamp(
-          0.0,
-          1.0,
-        );
+    final double rawProgress = ((currentTime - segmentStart) /
+            (segmentEnd - segmentStart))
+        .clamp(0.0, 1.0);
     return _spec.entranceCurve.transform(rawProgress);
   }
 

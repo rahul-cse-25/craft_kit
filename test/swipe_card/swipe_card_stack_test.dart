@@ -24,8 +24,9 @@ Widget _app({
             onSwipe: onSwipe,
             onEnd: onEnd,
             allowedDirections: allowed,
-            itemBuilder: (context, item, index) =>
-                Card(child: Center(child: Text(item))),
+            itemBuilder:
+                (context, item, index) =>
+                    Card(child: Center(child: Text(item))),
             emptyBuilder: (context) => const Text('empty'),
           ),
         ),

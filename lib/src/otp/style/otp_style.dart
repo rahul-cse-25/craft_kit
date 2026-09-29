@@ -1,5 +1,17 @@
 import 'package:flutter/material.dart';
 
+/// How the glow and icon shadow of the success and failure result look.
+enum OtpResultGlow {
+  /// The glow uses [OtpStyle.glowColor] and the icon shadow is white. This is
+  /// the look of `const OtpStyle()`.
+  classic,
+
+  /// The glow takes the middle color of the result gradient, is a little
+  /// stronger, and the icon shadow uses the icon color. This is the look of
+  /// [OtpStyle.fromTheme].
+  followGradient,
+}
+
 /// Visual configuration of an OTP field.
 ///
 /// `const OtpStyle()` is a dark-surface look (white text, white outlines,
@@ -18,6 +30,8 @@ class OtpStyle {
     this.focusedBorderWidth = 1.8,
     this.focusScale = 1.03,
     this.processingWidthFactor = 1.48,
+    this.canvasVerticalPadding = 44,
+    this.resultGlow = OtpResultGlow.classic,
     this.backgroundColor = Colors.transparent,
     this.filledBackgroundColor = Colors.transparent,
     this.borderColor = Colors.white12,
@@ -56,48 +70,89 @@ class OtpStyle {
   });
 
   /// Derives colors from [theme], so the field looks right on light and dark
-  /// surfaces. Pass [base] to keep custom geometry and only re-color.
+  /// surfaces.
+  ///
+  /// Surfaces, borders and text follow the [ColorScheme]; the success and
+  /// failure gradients are tuned separately for light and dark. It also
+  /// selects the tighter field height ([canvasVerticalPadding] 24) and
+  /// [OtpResultGlow.followGradient]; override either afterwards with
+  /// [copyWith]. Pass [base] to keep custom geometry (box size, gap, radii).
   factory OtpStyle.fromTheme(
     ThemeData theme, {
     OtpStyle base = const OtpStyle(),
   }) {
-    final ColorScheme scheme = theme.colorScheme;
-    final Color text = scheme.onSurface;
-    final Color success = Colors.green.shade500;
-    final Color error = scheme.error;
+    final ColorScheme colors = theme.colorScheme;
+    final bool isDark = theme.brightness == Brightness.dark;
+    const Color success = Color(0xFF2E7D5A);
+
     return base.copyWith(
-      borderColor: scheme.outlineVariant,
-      focusedBorderColor: scheme.primary,
-      filledBorderColor: scheme.primary.withValues(alpha: 0.6),
+      canvasVerticalPadding: 24,
+      resultGlow: OtpResultGlow.followGradient,
+      backgroundColor: colors.surface,
+      filledBackgroundColor: colors.primaryContainer.withValues(alpha: 0.34),
+      borderColor: colors.outlineVariant,
+      focusedBorderColor: colors.primary,
+      filledBorderColor: success,
       successBorderColor: success,
-      errorBorderColor: error,
-      textColor: text,
-      processingDotColor: scheme.onPrimary,
-      processingTrackColor: scheme.onPrimary.withValues(alpha: 0.25),
-      processingHighlightColor: scheme.onPrimary.withValues(alpha: 0.5),
-      processingOutlineColor: scheme.onPrimary.withValues(alpha: 0.24),
+      errorBorderColor: colors.error,
+      textColor: colors.onSurface,
+      processingDotColor: colors.onSurface,
+      processingTrackColor: colors.onSurface.withValues(alpha: 0.20),
+      processingHighlightColor: colors.onSurface.withValues(alpha: 0.56),
+      processingOutlineColor: colors.onSurface.withValues(alpha: 0.20),
       processingGradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: <Color>[scheme.primary, scheme.tertiary],
+        colors: <Color>[colors.primary, colors.secondary, colors.tertiary],
       ),
       successGradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: <Color>[success, Colors.green.shade300],
+        colors:
+            isDark
+                ? const <Color>[
+                  Color(0xFF6EE7B7),
+                  Color(0xFF10B981),
+                  Color(0xFF2DD4BF),
+                ]
+                : const <Color>[
+                  Color(0xFF047857),
+                  Color(0xFF10B981),
+                  Color(0xFF2DD4BF),
+                ],
+        stops: const <double>[0, 0.52, 1],
       ),
       failureGradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: <Color>[error, scheme.errorContainer],
+        colors:
+            isDark
+                ? const <Color>[
+                  Color(0xFFFF8AA0),
+                  Color(0xFFF43F5E),
+                  Color(0xFFFFA45B),
+                ]
+                : const <Color>[
+                  Color(0xFFBE123C),
+                  Color(0xFFF43F5E),
+                  Color(0xFFF97316),
+                ],
+        stops: const <double>[0, 0.52, 1],
       ),
-      glowColor: scheme.primary.withValues(alpha: 0.5),
-      resultIconColor: Colors.white,
-      textStyle: (theme.textTheme.titleMedium ?? const TextStyle()).copyWith(
-        fontWeight: FontWeight.w600,
-        height: 1,
-        color: text,
-      ),
+      glowColor: colors.primary.withValues(alpha: 0.35),
+      resultIconColor: colors.onSurface,
+      textStyle:
+          theme.textTheme.titleMedium?.copyWith(
+            color: colors.onSurface,
+            fontWeight: FontWeight.w600,
+            height: 1,
+          ) ??
+          TextStyle(
+            color: colors.onSurface,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            height: 1,
+          ),
     );
   }
 
@@ -110,6 +165,13 @@ class OtpStyle {
   final double focusedBorderWidth;
   final double focusScale;
   final double processingWidthFactor;
+
+  /// Extra height added around the boxes for the entrance motion and the
+  /// glow. The field is `boxHeight + canvasVerticalPadding` tall.
+  final double canvasVerticalPadding;
+
+  /// Look of the success and failure glow. See [OtpResultGlow].
+  final OtpResultGlow resultGlow;
   final Color backgroundColor;
   final Color filledBackgroundColor;
   final Color borderColor;
@@ -139,6 +201,8 @@ class OtpStyle {
     double? focusedBorderWidth,
     double? focusScale,
     double? processingWidthFactor,
+    double? canvasVerticalPadding,
+    OtpResultGlow? resultGlow,
     Color? backgroundColor,
     Color? filledBackgroundColor,
     Color? borderColor,
@@ -169,6 +233,9 @@ class OtpStyle {
       focusScale: focusScale ?? this.focusScale,
       processingWidthFactor:
           processingWidthFactor ?? this.processingWidthFactor,
+      canvasVerticalPadding:
+          canvasVerticalPadding ?? this.canvasVerticalPadding,
+      resultGlow: resultGlow ?? this.resultGlow,
       backgroundColor: backgroundColor ?? this.backgroundColor,
       filledBackgroundColor:
           filledBackgroundColor ?? this.filledBackgroundColor,

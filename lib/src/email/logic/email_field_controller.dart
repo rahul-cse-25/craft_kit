@@ -137,11 +137,11 @@ class EmailFieldController {
     if (_isDisposed) return;
     final List<EmailSuggestionItem> next =
         !focusNode.hasFocus || !_suggestionsEnabled
-        ? const <EmailSuggestionItem>[]
-        : _engine.suggest(
-            rawInput: textController.text,
-            rememberedEmails: _entries,
-          );
+            ? const <EmailSuggestionItem>[]
+            : _engine.suggest(
+              rawInput: textController.text,
+              rememberedEmails: _entries,
+            );
     if (_same(suggestions.value, next)) return;
     suggestions.value = next;
   }

@@ -28,11 +28,11 @@ class EmailInputFormatter extends TextInputFormatter {
     final TextRange composing = newValue.composing;
     final TextRange safeComposing =
         composing.isValid &&
-            composing.start >= 0 &&
-            composing.end >= composing.start &&
-            composing.end <= normalized.length
-        ? composing
-        : TextRange.empty;
+                composing.start >= 0 &&
+                composing.end >= composing.start &&
+                composing.end <= normalized.length
+            ? composing
+            : TextRange.empty;
 
     return newValue.copyWith(
       text: normalized,

@@ -161,8 +161,8 @@ class _SwipeCardStackState<T> extends State<SwipeCardStack<T>>
 
   double _extent(SwipeDirection d) =>
       (d == SwipeDirection.left || d == SwipeDirection.right)
-      ? _size.width
-      : _size.height;
+          ? _size.width
+          : _size.height;
 
   double _progress() {
     if (_offset == Offset.zero || _size.isEmpty) return 0;
@@ -298,9 +298,10 @@ class _SwipeCardStackState<T> extends State<SwipeCardStack<T>>
 
   Widget _buildTopCard(BuildContext context, double progress) {
     final item = widget.items[_index];
-    final angle = _size.width == 0
-        ? 0.0
-        : (_offset.dx / _size.width).clamp(-1.0, 1.0) * widget.maxAngle;
+    final angle =
+        _size.width == 0
+            ? 0.0
+            : (_offset.dx / _size.width).clamp(-1.0, 1.0) * widget.maxAngle;
     final overlay = widget.overlayBuilder;
     return Positioned.fill(
       child: GestureDetector(

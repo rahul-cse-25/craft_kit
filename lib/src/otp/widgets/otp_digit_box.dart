@@ -30,12 +30,10 @@ class OtpDigitBoxView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Duration fillDuration = disableAnimations
-        ? Duration.zero
-        : animationSpec.fillDuration;
-    final Duration focusDuration = disableAnimations
-        ? Duration.zero
-        : animationSpec.focusDuration;
+    final Duration fillDuration =
+        disableAnimations ? Duration.zero : animationSpec.fillDuration;
+    final Duration focusDuration =
+        disableAnimations ? Duration.zero : animationSpec.focusDuration;
     final Color borderColor = switch (phase) {
       OtpPhase.failure => style.errorBorderColor,
       OtpPhase.success => style.successBorderColor,
@@ -43,32 +41,32 @@ class OtpDigitBoxView extends StatelessWidget {
       _ when isFilled => style.filledBorderColor,
       _ => style.borderColor,
     };
-    final Color backgroundColor = isFilled
-        ? style.filledBackgroundColor
-        : style.backgroundColor;
-    final List<BoxShadow> shadow = isFocused && enabled
-        ? <BoxShadow>[
-            BoxShadow(
-              color: style.focusedBorderColor.withValues(alpha: 0.24),
-              blurRadius: 22,
-              spreadRadius: 0.6,
-            ),
-            if (isFilled)
+    final Color backgroundColor =
+        isFilled ? style.filledBackgroundColor : style.backgroundColor;
+    final List<BoxShadow> shadow =
+        isFocused && enabled
+            ? <BoxShadow>[
               BoxShadow(
-                color: style.filledBorderColor.withValues(alpha: 0.10),
-                blurRadius: 16,
-                spreadRadius: -0.5,
+                color: style.focusedBorderColor.withValues(alpha: 0.24),
+                blurRadius: 22,
+                spreadRadius: 0.6,
               ),
-          ]
-        : isFilled && enabled
-        ? <BoxShadow>[
-            BoxShadow(
-              color: style.filledBorderColor.withValues(alpha: 0.11),
-              blurRadius: 14,
-              spreadRadius: -0.6,
-            ),
-          ]
-        : const <BoxShadow>[];
+              if (isFilled)
+                BoxShadow(
+                  color: style.filledBorderColor.withValues(alpha: 0.10),
+                  blurRadius: 16,
+                  spreadRadius: -0.5,
+                ),
+            ]
+            : isFilled && enabled
+            ? <BoxShadow>[
+              BoxShadow(
+                color: style.filledBorderColor.withValues(alpha: 0.11),
+                blurRadius: 14,
+                spreadRadius: -0.6,
+              ),
+            ]
+            : const <BoxShadow>[];
 
     return Opacity(
       opacity: enabled ? opacity : opacity * 0.64,
@@ -110,17 +108,19 @@ class OtpDigitBoxView extends StatelessWidget {
                   ),
                 );
               },
-              child: digit.isEmpty
-                  ? const SizedBox.shrink(key: ValueKey<String>('empty'))
-                  : Text(
-                      digit,
-                      key: ValueKey<String>(digit),
-                      style: style.textStyle.copyWith(
-                        color: enabled
-                            ? style.textColor
-                            : style.textColor.withValues(alpha: 0.58),
+              child:
+                  digit.isEmpty
+                      ? const SizedBox.shrink(key: ValueKey<String>('empty'))
+                      : Text(
+                        digit,
+                        key: ValueKey<String>(digit),
+                        style: style.textStyle.copyWith(
+                          color:
+                              enabled
+                                  ? style.textColor
+                                  : style.textColor.withValues(alpha: 0.58),
+                        ),
                       ),
-                    ),
             ),
           ),
         ),

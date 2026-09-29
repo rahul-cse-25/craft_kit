@@ -33,6 +33,10 @@ class RememberedEmailField extends StatelessWidget {
     this.onSubmitted,
     this.decoration = const InputDecoration(labelText: 'Email'),
     this.emptyGap = 16,
+    this.textInputAction = TextInputAction.next,
+    this.invalidEmailMessage = 'Please enter a valid email',
+    this.autovalidateMode = AutovalidateMode.onUserInteraction,
+    this.suggestionPadding = const EdgeInsets.symmetric(vertical: 8),
   });
 
   /// Text, focus and suggestions.
@@ -58,6 +62,18 @@ class RememberedEmailField extends StatelessWidget {
   /// layout does not jump when chips appear.
   final double emptyGap;
 
+  /// Keyboard action of the default field.
+  final TextInputAction textInputAction;
+
+  /// Error text of the default field's validator.
+  final String invalidEmailMessage;
+
+  /// When the default field validates.
+  final AutovalidateMode autovalidateMode;
+
+  /// Space around the suggestion chips.
+  final EdgeInsetsGeometry suggestionPadding;
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -74,13 +90,18 @@ class RememberedEmailField extends StatelessWidget {
               enabled: enabled,
               decoration: decoration,
               keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.next,
+              textInputAction: textInputAction,
               autofillHints: const <String>[AutofillHints.email],
               inputFormatters: const <EmailInputFormatter>[
                 EmailInputFormatter(),
               ],
               onFieldSubmitted: onSubmitted,
-              validator: EmailValidator.validate,
+              autovalidateMode: autovalidateMode,
+              validator:
+                  (String? value) => EmailValidator.validate(
+                    value,
+                    message: invalidEmailMessage,
+                  ),
             ),
         ValueListenableBuilder<List<EmailSuggestionItem>>(
           valueListenable: controller.suggestions,
@@ -92,6 +113,7 @@ class RememberedEmailField extends StatelessWidget {
               suggestions: items,
               onSelected: controller.selectSuggestion,
               itemBuilder: suggestionBuilder,
+              padding: suggestionPadding,
             );
           },
         ),

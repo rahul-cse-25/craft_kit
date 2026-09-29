@@ -97,7 +97,8 @@ OtpCodeField(
   Or `otp.setCode(...)` from code, for example with an SMS-retrieval plugin.
   Text is cleaned: `"123 456"` and `"Order 22, code 654321"` both work, and
   Arabic-Indic digits are converted.
-* **Lifecycle:** `beginProcessing`, `showSuccess`, `showFailure`,
+* **Lifecycle:** `beginProcessing`, `showSuccess` (or `await
+  showSuccessAndWait()` to wait for the animation), `showFailure`,
   `restoreEditing`, plus `clear`, `requestFocus`, `unfocus`. `otp.phase`
   reports where the field is.
 * **Look:** `style: null` derives colors from your `Theme`. Pass

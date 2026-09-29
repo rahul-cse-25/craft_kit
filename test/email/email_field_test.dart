@@ -125,9 +125,7 @@ void main() {
       final c = await controllerWith(store);
       addTearDown(c.dispose);
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(body: RememberedEmailField(controller: c)),
-        ),
+        MaterialApp(home: Scaffold(body: RememberedEmailField(controller: c))),
       );
 
       await tester.tap(find.byType(TextFormField));
@@ -147,12 +145,39 @@ void main() {
       final c = await controllerWith(store);
       addTearDown(c.dispose);
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(body: RememberedEmailField(controller: c)),
-        ),
+        MaterialApp(home: Scaffold(body: RememberedEmailField(controller: c))),
       );
       await tester.enterText(find.byType(TextFormField), 'A B@X.CO');
       expect(c.email, 'ab@x.co');
+    });
+
+    testWidgets('message, action and padding options apply', (tester) async {
+      final c = await controllerWith(store);
+      addTearDown(c.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: RememberedEmailField(
+              controller: c,
+              invalidEmailMessage: 'Nope, that is not an email',
+              textInputAction: TextInputAction.done,
+              suggestionPadding: const EdgeInsets.only(top: 3),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(TextFormField));
+      await tester.enterText(find.byType(TextFormField), 'an');
+      await tester.pump();
+
+      expect(find.text('Nope, that is not an email'), findsOneWidget);
+      final field = tester.widget<TextField>(find.byType(TextField));
+      expect(field.textInputAction, TextInputAction.done);
+      final view = tester.widget<EmailSuggestionsView>(
+        find.byType(EmailSuggestionsView),
+      );
+      expect(view.padding, const EdgeInsets.only(top: 3));
     });
 
     testWidgets('fieldBuilder and suggestionBuilder replace the UI', (
@@ -165,10 +190,14 @@ void main() {
           home: Scaffold(
             body: RememberedEmailField(
               controller: c,
-              fieldBuilder: (context, controller, focus) =>
-                  TextField(controller: controller, focusNode: focus),
-              suggestionBuilder: (context, s, onTap) =>
-                  TextButton(onPressed: onTap, child: Text('pick ${s.label}')),
+              fieldBuilder:
+                  (context, controller, focus) =>
+                      TextField(controller: controller, focusNode: focus),
+              suggestionBuilder:
+                  (context, s, onTap) => TextButton(
+                    onPressed: onTap,
+                    child: Text('pick ${s.label}'),
+                  ),
             ),
           ),
         ),

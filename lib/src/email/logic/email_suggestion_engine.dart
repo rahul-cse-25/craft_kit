@@ -226,11 +226,12 @@ class EmailSuggestionEngine {
       }
       final domain = parts.last;
       final existing = aggregated[domain];
-      final latestLastUsedAt = existing == null
-          ? entry.lastUsedAtEpochMs
-          : existing.lastUsedAtEpochMs > entry.lastUsedAtEpochMs
-          ? existing.lastUsedAtEpochMs
-          : entry.lastUsedAtEpochMs;
+      final latestLastUsedAt =
+          existing == null
+              ? entry.lastUsedAtEpochMs
+              : existing.lastUsedAtEpochMs > entry.lastUsedAtEpochMs
+              ? existing.lastUsedAtEpochMs
+              : entry.lastUsedAtEpochMs;
       aggregated[domain] = _RememberedDomainEntry(
         domain: domain,
         useCount: (existing?.useCount ?? 0) + entry.useCount,

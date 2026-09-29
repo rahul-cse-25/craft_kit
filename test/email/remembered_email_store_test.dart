@@ -93,6 +93,27 @@ void main() {
     expect(await storage.read('k'), isNull);
   });
 
+  test('reports discarded data through onCorruptData', () async {
+    final reported = <Object>[];
+    final watching = StorageRememberedEmailStore(
+      storage,
+      storageKey: 'k',
+      onCorruptData: (error, stack) => reported.add(error),
+    );
+
+    await storage.write('k', '{not json');
+    expect(await watching.loadEntries(), isEmpty);
+    expect(reported, hasLength(1));
+
+    await storage.write('k', '{"a":1}'); // valid JSON, wrong shape
+    expect(await watching.loadEntries(), isEmpty);
+    expect(reported, hasLength(2));
+
+    await watching.rememberEmail('a@x.co'); // healthy data reports nothing
+    await watching.loadEntries();
+    expect(reported, hasLength(2));
+  });
+
   test('accepts a custom validator', () async {
     final strict = StorageRememberedEmailStore(
       storage,

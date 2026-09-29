@@ -63,9 +63,10 @@ void main() {
     });
 
     test('focused index follows the next empty box', () {
-      final m = OtpStateMachine(length: 4)
-        ..updateFocus(true)
-        ..applyCode('12');
+      final m =
+          OtpStateMachine(length: 4)
+            ..updateFocus(true)
+            ..applyCode('12');
       expect(m.state.focusedIndex, 2);
       m.applyCode('1234');
       expect(m.state.focusedIndex, 3);
