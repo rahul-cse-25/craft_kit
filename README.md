@@ -8,7 +8,7 @@ you like) your own text field and chips; craft_kit brings the logic.
 |---|---|
 | **Remembered emails** | History ranked by recency and use count, live suggestions with domain completion (`anna@gm` → `anna@gmail.com`), a UI-free controller, and a themed default field you can replace. |
 | **OTP input** | An animated code field: typing, paste, autofill, long-press delete, and a verification lifecycle (processing, success, failure, restore) with haptics. |
-| **Swipeable cards** *(preview)* | `SwipeCardStack` with drag, fling, programmatic swipe and undo. The API may change. |
+| **Swipeable cards** | `SwipeCardStack`: spring-physics swiping in any direction, a different behavior per direction (dismiss, consume into a button, run a task and spring back, send to the back), undo, and any card or stack look you like. |
 
 ## Install
 
@@ -106,6 +106,81 @@ OtpCodeField(
   base: ...)` to keep your own geometry. Everything else is configurable
   through `OtpAnimationSpec`, `OtpHaptics` and `OtpLabels` (localizable
   accessibility strings).
+
+## Swipeable cards
+
+```dart
+final controller = SwipeCardController();
+final likeKey = GlobalKey();
+
+SizedBox(
+  height: 480,
+  child: SwipeCardStack<Profile>(
+    items: profiles,
+    controller: controller,
+    itemBuilder: (context, profile, info) => ProfileCard(profile),
+    // What each direction does. A direction that is not listed cannot be
+    // swiped: the card stretches with resistance and springs back.
+    behaviors: {
+      SwipeDirection.left: SwipeBehavior.dismiss(),
+      SwipeDirection.right: SwipeBehavior.consume(
+        target: SwipeTarget(key: likeKey),        // shrinks into this widget
+        onArrive: (profile) => save(profile),
+      ),
+      SwipeDirection.up: SwipeBehavior.springBack(  // run a task, stay in deck
+        onCommit: (event) => superLike(event.item),
+      ),
+      SwipeDirection.down: SwipeBehavior.sendToBack(),
+    },
+    overlayBuilder: (context, progress) => Stamps(progress), // LIKE / NOPE ...
+    onSwipe: (event) => log(event.item, event.direction, event.outcome),
+  ),
+);
+
+controller.swipe(SwipeDirection.right); // from a button: same behavior
+controller.undo();
+```
+
+**Behaviors** (`SwipeOutcome`): `dismiss` flies off; `consume` shrinks along a
+curve into a `SwipeTarget` (falls back to `dismiss` if the target is not on
+screen); `springBack` runs your callback and returns the card to the stack;
+`sendToBack` re-queues it at the end. Any behavior can take a `guard` to refuse
+an item, and `onCommit`.
+
+**Buttons that react.** Wrap the target in `SwipeReaction` to make it swell as a
+card approaches (`state.approach`) and pulse when one arrives
+(`state.arrival`). `controller.progress` and `controller.consuming` expose the
+same live values.
+
+**Feel.** Every movement is a spring that starts from the card's current
+position and velocity, so a release never jumps, a card can be caught at any
+moment (even mid-flight), and the next card can be grabbed while the last one
+is still leaving. A release is judged by where the card is *heading*, so a
+quick flick commits after a short distance and a slow drag has to go further.
+Tune it with `SwipePhysics` (`smooth`, `snappy`, `bouncy`, or your own
+springs, thresholds and tilt), and get a light haptic tick when a drag crosses
+the commit threshold.
+
+**Smoothness.** Cards are built once and moved with transforms only, so
+`itemBuilder` is not called while a card is dragged or animated (tests assert
+this), each card sits in a `RepaintBoundary`, springs are solved in closed form
+so a late frame never distorts an animation, and nothing ticks while idle.
+
+**Your own look.** `itemBuilder` builds any card; `SwipeStackLayout` decides how
+the cards behind it sit (`CascadeLayout` is included; implement `slotAt(depth)`
+for a fan, a carousel or anything else); `SwipeCardInfo` tells a card its depth
+and gives it live progress. Items are matched by `itemKey`, so a parent rebuild
+never resets the deck, and `onNeedMore` / `onPreload` support infinite feeds
+and image precaching.
+
+**Accessibility and input.** Screen readers get a custom action per direction,
+arrow keys swipe while the stack has focus, mouse and trackpad drag work, and
+reduced-motion settings make swipes finish immediately.
+
+Directions are physical (left is always the left edge, also in RTL layouts).
+The stack needs bounded width and height. Place it in an `IndexedStack` or
+`Expanded`, not in a `TabBarView`/`PageView`, whose horizontal scrolling
+competes with horizontal swipes.
 
 ## Example
 

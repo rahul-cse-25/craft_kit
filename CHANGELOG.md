@@ -8,7 +8,20 @@
 * OTP input: `OtpCodeField` and `OtpCodeController` with paste, autofill and a
   processing / success / failure lifecycle; `OtpStyle`, `OtpAnimationSpec`,
   `OtpHaptics`, `OtpLabels`.
-* Swipeable cards (preview): `SwipeCardStack`, `SwipeCardController`.
+* Swipeable cards: `SwipeCardStack` and `SwipeCardController`, a spring-physics
+  engine with:
+  * a behavior per direction: dismiss, consume into a `SwipeTarget`, spring
+    back after running a task, or send to the back (`SwipeBehavior`);
+  * `SwipeReaction` for buttons that react to a card approaching and arriving;
+  * releases judged by projected position, velocity handed to the animation,
+    interruptible at any moment, and rubber-banding toward closed directions;
+  * `SwipePhysics` (smooth, snappy, bouncy, or custom springs), `SwipeHaptics`,
+    grab-point tilt, and per-direction progress for flicker-free overlays;
+  * `SwipeStackLayout` (`CascadeLayout` included) and `SwipeCardInfo` for any
+    stack look, `itemKey` based deck identity, undo, reset, `onNeedMore`,
+    `onPreload`, keyboard, and screen-reader actions.
+  Cards are built once and moved with transforms, so `itemBuilder` is not
+  called while a card moves.
 * `OtpCodeController.showSuccessAndWait()` returns a future that completes when
   the success animation ends.
 * `OtpStyle.canvasVerticalPadding` (default 44) and `OtpStyle.resultGlow`
