@@ -203,10 +203,6 @@ changes everything live while you keep swiping, including what each direction
 does, every physics number and spring, the stack layout, input and haptics,
 feeds and preloading, a live readout of drag progress, and an event log.
 
-## Migrating from bump_fm_app
-
-See [MIGRATION_FROM_BUMP.md](MIGRATION_FROM_BUMP.md).
-
 ## Contributing
 
 Issues and pull requests are welcome. Run `flutter analyze` and `flutter test`

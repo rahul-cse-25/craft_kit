@@ -29,7 +29,6 @@ class OtpStyle {
     this.borderWidth = 1.4,
     this.focusedBorderWidth = 1.8,
     this.focusScale = 1.03,
-    this.processingWidthFactor = 1.48,
     this.canvasVerticalPadding = 44,
     this.resultGlow = OtpResultGlow.classic,
     this.backgroundColor = Colors.transparent,
@@ -180,10 +179,6 @@ class OtpStyle {
   /// Scale applied to the focused box (1 means no scaling).
   final double focusScale;
 
-  /// Width multiplier for the processing capsule relative to a box. Not
-  /// currently read by the widgets.
-  final double processingWidthFactor;
-
   /// Extra height added around the boxes for the entrance motion and the
   /// glow. The field is `boxHeight + canvasVerticalPadding` tall.
   final double canvasVerticalPadding;
@@ -255,7 +250,6 @@ class OtpStyle {
     double? borderWidth,
     double? focusedBorderWidth,
     double? focusScale,
-    double? processingWidthFactor,
     double? canvasVerticalPadding,
     OtpResultGlow? resultGlow,
     Color? backgroundColor,
@@ -286,8 +280,6 @@ class OtpStyle {
       borderWidth: borderWidth ?? this.borderWidth,
       focusedBorderWidth: focusedBorderWidth ?? this.focusedBorderWidth,
       focusScale: focusScale ?? this.focusScale,
-      processingWidthFactor:
-          processingWidthFactor ?? this.processingWidthFactor,
       canvasVerticalPadding:
           canvasVerticalPadding ?? this.canvasVerticalPadding,
       resultGlow: resultGlow ?? this.resultGlow,
