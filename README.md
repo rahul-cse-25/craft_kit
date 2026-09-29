@@ -184,7 +184,11 @@ competes with horizontal swipes.
 
 ## Example
 
-A runnable demo of every feature is in [`example/`](example).
+A runnable demo of every feature is in [`example/`](example). On the Swipe tab,
+the tune button (top right) opens a **control center**: a draggable sheet that
+changes everything live while you keep swiping, including what each direction
+does, every physics number and spring, the stack layout, input and haptics,
+feeds and preloading, a live readout of drag progress, and an event log.
 
 ## Migrating from bump_fm_app
 
