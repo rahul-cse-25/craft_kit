@@ -1,0 +1,9 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    - public_member_api_docs
+    - prefer_final_locals
+    - prefer_single_quotes
+    - directives_ordering
+    - unawaited_futures

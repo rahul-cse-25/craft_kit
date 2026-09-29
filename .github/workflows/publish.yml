@@ -1,0 +1,23 @@
+name: Publish to pub.dev
+
+# One-time setup on pub.dev: package Admin tab -> Automated publishing ->
+# enable "from GitHub Actions", repository <account>/craft_kit, tag pattern
+# v{{version}}. Then push a tag like v0.1.0 to publish.
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required for pub.dev OIDC authentication.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter test
+      - run: flutter pub publish --force

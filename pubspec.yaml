@@ -1,0 +1,27 @@
+name: craft_kit
+description: >-
+  A growing toolkit of Flutter UI helpers: remembered-email store and field,
+  OTP input with paste and autofill, and swipeable card stacks.
+version: 0.1.0
+# Add these once the GitHub repo exists (pub.dev scores them):
+# repository: https://github.com/<your-account>/craft_kit
+# issue_tracker: https://github.com/<your-account>/craft_kit/issues
+topics:
+  - widgets
+  - otp
+  - swipe
+  - form
+  - ui
+
+environment:
+  sdk: ^3.12.2
+  flutter: ">=3.32.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
