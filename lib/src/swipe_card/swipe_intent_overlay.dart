@@ -87,7 +87,8 @@ class SwipeIntentOverlay extends StatelessWidget {
   /// Rounds the wash to the card's corners.
   final BorderRadius borderRadius;
 
-  /// How opaque the colour wash gets at the commit threshold (0 to 1).
+  /// How opaque the colour wash gets at the commit threshold (0 to 1). With 0
+  /// there is no wash at all, only the badge, which is also the cheapest.
   final double washStrength;
 
   /// Diameter of the badge.

@@ -59,6 +59,31 @@ void main() {
     expect(find.byKey(const ValueKey('nope-icon')), findsOneWidget);
   });
 
+  testWidgets('with no wash there is only the badge: no gradient, no clip', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: SwipeIntentOverlay(
+          progress: SwipeProgress(right: 1),
+          intents: _intents,
+          washStrength: 0,
+        ),
+      ),
+    );
+    expect(find.byKey(const ValueKey('like-icon')), findsOneWidget);
+    expect(find.byType(ClipRRect), findsNothing);
+    final gradients = tester
+        .widgetList<DecoratedBox>(find.byType(DecoratedBox))
+        .where((d) {
+          final decoration = d.decoration;
+          return decoration is BoxDecoration &&
+              decoration.gradient != null &&
+              decoration.shape == BoxShape.rectangle;
+        });
+    expect(gradients, isEmpty);
+  });
+
   testWidgets('never takes touches from the card', (tester) async {
     var taps = 0;
     await tester.pumpWidget(
