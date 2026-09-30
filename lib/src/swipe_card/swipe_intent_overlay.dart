@@ -107,11 +107,14 @@ class SwipeIntentOverlay extends StatelessWidget {
       layers.add(_IntentLayer(intent: intent, progress: p, overlay: this));
     }
     if (layers.isEmpty) return const SizedBox.shrink();
+    final stack = Stack(fit: StackFit.expand, children: layers);
+    // Only the wash reaches the card's corners; a badge-only overlay needs no
+    // clip.
     return IgnorePointer(
-      child: ClipRRect(
-        borderRadius: borderRadius,
-        child: Stack(fit: StackFit.expand, children: layers),
-      ),
+      child:
+          washStrength > 0
+              ? ClipRRect(borderRadius: borderRadius, child: stack)
+              : stack,
     );
   }
 }
@@ -157,20 +160,21 @@ class _IntentLayer extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: <Widget>[
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: begin,
-              end: end,
-              colors: <Color>[
-                color.withValues(alpha: wash),
-                color.withValues(alpha: wash * 0.35),
-                color.withValues(alpha: 0),
-              ],
-              stops: const <double>[0, 0.55, 1],
+        if (wash > 0)
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: begin,
+                end: end,
+                colors: <Color>[
+                  color.withValues(alpha: wash),
+                  color.withValues(alpha: wash * 0.35),
+                  color.withValues(alpha: 0),
+                ],
+                stops: const <double>[0, 0.55, 1],
+              ),
             ),
           ),
-        ),
         Align(
           alignment: alignment,
           child: Padding(

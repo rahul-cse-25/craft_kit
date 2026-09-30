@@ -72,7 +72,13 @@ void main() {
       ),
     );
     expect(find.byKey(const ValueKey('like-icon')), findsOneWidget);
-    expect(find.byType(ClipRRect), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(SwipeIntentOverlay),
+        matching: find.byType(ClipRRect),
+      ),
+      findsNothing,
+    );
     final gradients = tester
         .widgetList<DecoratedBox>(find.byType(DecoratedBox))
         .where((d) {
