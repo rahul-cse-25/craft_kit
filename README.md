@@ -4,9 +4,28 @@ Flutter UI helpers that feel good to use: a **swipeable card stack** with spring
 physics, an **OTP input**, and **remembered-email suggestions**. No third-party
 dependencies, fully tested, and each part works on its own.
 
+## See it in action
+
+### Swipeable cards
+
 <p align="center">
-  <img src="https://raw.githubusercontent.com/rahul-cse-25/craft_kit/main/screenshots/swipe_overview.gif" width="280" alt="Dragging a card stack in four directions">
-  <img src="https://raw.githubusercontent.com/rahul-cse-25/craft_kit/main/screenshots/swipe_genie.gif" width="280" alt="A card pouring into a button like the macOS Dock genie">
+  <img src="https://raw.githubusercontent.com/rahul-cse-25/craft_kit/main/screenshots/swipe_overview.gif" width="300" alt="Dragging a craft_kit card stack in four directions">
+  <img src="https://raw.githubusercontent.com/rahul-cse-25/craft_kit/main/screenshots/swipe_genie.gif" width="300" alt="A craft_kit card pouring into a button with the Dock-style genie effect">
+</p>
+
+<p align="center">
+  <em>Direction-aware overlays, spring motion, consume targets, and reversible actions.</em>
+</p>
+
+### OTP and remembered email
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/rahul-cse-25/craft_kit/main/screenshots/otp.gif" width="280" alt="craft_kit OTP input moving through editing, processing, success, and failure states">
+  <img src="https://raw.githubusercontent.com/rahul-cse-25/craft_kit/main/screenshots/email.gif" width="280" alt="craft_kit remembered-email field showing ranked email suggestions">
+</p>
+
+<p align="center">
+  <em>A complete OTP lifecycle and useful email suggestions, with replaceable UI layers.</em>
 </p>
 
 ## Why craft_kit
