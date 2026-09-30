@@ -1,7 +1,7 @@
 name: craft_kit
 description: >-
-  A growing toolkit of Flutter UI helpers: remembered-email store and field,
-  OTP input with paste and autofill, and swipeable card stacks.
+  Swipeable card stacks with spring physics, per-direction behaviors, undo and a
+  Dock-style genie, plus an OTP input and remembered-email suggestions.
 version: 0.1.0
 
 repository: https://github.com/rahul-cse-25/craft_kit

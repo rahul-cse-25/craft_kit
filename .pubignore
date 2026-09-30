@@ -1,1 +1,17 @@
+# A .pubignore replaces .gitignore for `dart pub publish`, so the generated
+# files are listed here again.
+.dart_tool/
+.flutter-plugins-dependencies
+.idea/
+*.iml
+build/
+coverage/
+pubspec.lock
+**/pubspec.lock
+**/doc/api/
+.DS_Store
+
+# Kept in the repository, not in the package.
 MIGRATION_FROM_BUMP.md
+screenshots/
+.github/

@@ -1,14 +1,34 @@
 # craft_kit
 
-A growing toolkit of Flutter UI helpers. Each feature is self-contained, has
-**no third-party dependencies**, and is tested. You bring the storage and (if
-you like) your own text field and chips; craft_kit brings the logic.
+Flutter UI helpers that feel good to use: a **swipeable card stack** with spring
+physics, an **OTP input**, and **remembered-email suggestions**. No third-party
+dependencies, fully tested, and each part works on its own.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/rahul-cse-25/craft_kit/main/screenshots/swipe_overview.gif" width="280" alt="Dragging a card stack in four directions">
+  <img src="https://raw.githubusercontent.com/rahul-cse-25/craft_kit/main/screenshots/swipe_genie.gif" width="280" alt="A card pouring into a button like the macOS Dock genie">
+</p>
+
+## Why craft_kit
+
+* **Swipe cards that do more than dismiss.** Give every direction its own
+  behavior: fly away, pour into a button (Dock-style genie), run a task and
+  spring back, go to the back of the deck, or bring the previous card back.
+* **Buttery by construction.** Every move is a spring that starts from the
+  card's current position and velocity, so nothing jumps and a card can be
+  caught mid-flight. Cards are built once and moved with transforms only, and
+  nothing ticks while idle.
+* **Yours to style.** Any card, any stack look, any drag overlay. Ready-made
+  overlays are included.
+* **Undo, rewind, jump.** Bring cards back, one or all, or jump to any card.
+* **Accessible.** Screen-reader actions, arrow-key swiping, reduced-motion
+  support.
 
 | Feature | What you get |
 |---|---|
-| **Remembered emails** | History ranked by recency and use count, live suggestions with domain completion (`anna@gm` → `anna@gmail.com`), a UI-free controller, and a themed default field you can replace. |
-| **OTP input** | An animated code field: typing, paste, autofill, long-press delete, and a verification lifecycle (processing, success, failure, restore) with haptics. |
-| **Swipeable cards** | `SwipeCardStack`: spring-physics swiping in any direction, a different behavior per direction (dismiss, consume into a button, run a task and spring back, send to the back), undo, and any card or stack look you like. |
+| **Swipeable cards** | `SwipeCardStack` and `SwipeCardController`: a behavior per direction, undo and rewind, drag overlays, and any card or stack look. |
+| **OTP input** | `OtpCodeField`: typing, paste, autofill, long-press delete, and a verification lifecycle (processing, success, failure, restore) with haptics. |
+| **Remembered emails** | History ranked by recency and use count, live suggestions with domain completion (`anna@gm` to `anna@gmail.com`), a UI-free controller, and a themed default field you can replace. |
 
 ## Install
 
@@ -21,93 +41,22 @@ dependencies:
 import 'package:craft_kit/craft_kit.dart';
 ```
 
-## Remembered emails
-
-Three layers, use as many as you want:
-
-1. **`RememberedEmailStore`**: where the history lives.
-   `StorageRememberedEmailStore` keeps it in any `CraftStorage`.
-2. **`EmailFieldController`**: text, focus and live suggestions. No UI.
-3. **`RememberedEmailField`**: a field plus suggestion chips.
+## Quick start: swipeable cards
 
 ```dart
-final store = StorageRememberedEmailStore(PrefsStorage(prefs));
-final email = EmailFieldController(store: store);
-
-// UI, with the default themed field...
-RememberedEmailField(controller: email);
-
-// ...or keep your own text field and chips:
-RememberedEmailField(
-  controller: email,
-  fieldBuilder: (context, controller, focusNode) =>
-      MyTextField(controller: controller, focusNode: focusNode),
-  suggestionBuilder: (context, suggestion, onTap) =>
-      MyChip(label: suggestion.label, onTap: onTap),
-);
-
-// After a successful sign-in:
-await email.rememberCurrentEmail();
-
-// Hide suggestions while another step is on screen:
-email.suggestionsEnabled = false;
+SizedBox(
+  height: 480, // the stack needs a bounded width and height
+  child: SwipeCardStack<Profile>(
+    items: profiles,
+    itemBuilder: (context, profile, info) => ProfileCard(profile),
+  ),
+)
 ```
 
-`CraftStorage` is three methods. On top of `shared_preferences`:
+That is a working stack: left and right swipes dismiss the card, up and down
+resist and spring back. Everything below is opt-in.
 
-```dart
-class PrefsStorage implements CraftStorage {
-  PrefsStorage(this._prefs);
-  final SharedPreferences _prefs;
-
-  @override
-  Future<String?> read(String key) async => _prefs.getString(key);
-  @override
-  Future<void> write(String key, String value) => _prefs.setString(key, value);
-  @override
-  Future<void> remove(String key) => _prefs.remove(key);
-}
-```
-
-Tune the behavior with `StorageRememberedEmailStore(maxEntries:, storageKey:,
-isValidEmail:)` and `EmailSuggestionEngine(commonDomains:, maxSuggestions:,
-isValidEmail:)`.
-
-> Emails are personal data. Back `CraftStorage` with encrypted storage if that
-> matters for your app, and offer a way to clear it (`store.clear()`,
-> `store.forgetEmail(...)`).
-
-## OTP input
-
-```dart
-final otp = OtpCodeController();
-
-OtpCodeField(
-  controller: otp,
-  length: 6,
-  onCompleted: (code) async {
-    otp.beginProcessing();                 // collapse into a loader
-    final ok = await verify(code);
-    ok ? otp.showSuccess() : otp.showFailure(keepCode: false);
-  },
-);
-```
-
-* **Filling:** type, paste, or system autofill (`AutofillHints.oneTimeCode`).
-  Or `otp.setCode(...)` from code, for example with an SMS-retrieval plugin.
-  Text is cleaned: `"123 456"` and `"Order 22, code 654321"` both work, and
-  Arabic-Indic digits are converted.
-* **Lifecycle:** `beginProcessing`, `showSuccess` (or `await
-  showSuccessAndWait()` to wait for the animation), `showFailure`,
-  `restoreEditing`, plus `clear`, `requestFocus`, `unfocus`. `otp.phase`
-  reports where the field is.
-* **Look:** `style: null` derives colors from your `Theme`. Pass
-  `const OtpStyle()` for the dark-surface look, or `OtpStyle.fromTheme(theme,
-  base: ...)` to keep your own geometry. Everything else is configurable
-  through `OtpAnimationSpec`, `OtpHaptics` and `OtpLabels` (localizable
-  accessibility strings).
-
-## Swipeable cards
+## Swipeable cards in depth
 
 ```dart
 final controller = SwipeCardController();
@@ -209,6 +158,92 @@ Directions are physical (left is always the left edge, also in RTL layouts).
 The stack needs bounded width and height. Place it in an `IndexedStack` or
 `Expanded`, not in a `TabBarView`/`PageView`, whose horizontal scrolling
 competes with horizontal swipes.
+
+## Remembered emails
+
+Three layers, use as many as you want:
+
+1. **`RememberedEmailStore`**: where the history lives.
+   `StorageRememberedEmailStore` keeps it in any `CraftStorage`.
+2. **`EmailFieldController`**: text, focus and live suggestions. No UI.
+3. **`RememberedEmailField`**: a field plus suggestion chips.
+
+```dart
+final store = StorageRememberedEmailStore(PrefsStorage(prefs));
+final email = EmailFieldController(store: store);
+
+// UI, with the default themed field...
+RememberedEmailField(controller: email);
+
+// ...or keep your own text field and chips:
+RememberedEmailField(
+  controller: email,
+  fieldBuilder: (context, controller, focusNode) =>
+      MyTextField(controller: controller, focusNode: focusNode),
+  suggestionBuilder: (context, suggestion, onTap) =>
+      MyChip(label: suggestion.label, onTap: onTap),
+);
+
+// After a successful sign-in:
+await email.rememberCurrentEmail();
+
+// Hide suggestions while another step is on screen:
+email.suggestionsEnabled = false;
+```
+
+`CraftStorage` is three methods. On top of `shared_preferences`:
+
+```dart
+class PrefsStorage implements CraftStorage {
+  PrefsStorage(this._prefs);
+  final SharedPreferences _prefs;
+
+  @override
+  Future<String?> read(String key) async => _prefs.getString(key);
+  @override
+  Future<void> write(String key, String value) => _prefs.setString(key, value);
+  @override
+  Future<void> remove(String key) => _prefs.remove(key);
+}
+```
+
+Tune the behavior with `StorageRememberedEmailStore(maxEntries:, storageKey:,
+isValidEmail:)` and `EmailSuggestionEngine(commonDomains:, maxSuggestions:,
+isValidEmail:)`.
+
+> Emails are personal data. Back `CraftStorage` with encrypted storage if that
+> matters for your app, and offer a way to clear it (`store.clear()`,
+> `store.forgetEmail(...)`).
+
+## OTP input
+
+```dart
+final otp = OtpCodeController();
+
+OtpCodeField(
+  controller: otp,
+  length: 6,
+  onCompleted: (code) async {
+    otp.beginProcessing();                 // collapse into a loader
+    final ok = await verify(code);
+    ok ? otp.showSuccess() : otp.showFailure(keepCode: false);
+  },
+);
+```
+
+* **Filling:** type, paste, or system autofill (`AutofillHints.oneTimeCode`).
+  Or `otp.setCode(...)` from code, for example with an SMS-retrieval plugin.
+  Text is cleaned: `"123 456"` and `"Order 22, code 654321"` both work, and
+  Arabic-Indic digits are converted.
+* **Lifecycle:** `beginProcessing`, `showSuccess` (or `await
+  showSuccessAndWait()` to wait for the animation), `showFailure`,
+  `restoreEditing`, plus `clear`, `requestFocus`, `unfocus`. `otp.phase`
+  reports where the field is.
+* **Look:** `style: null` derives colors from your `Theme`. Pass
+  `const OtpStyle()` for the dark-surface look, or `OtpStyle.fromTheme(theme,
+  base: ...)` to keep your own geometry. Everything else is configurable
+  through `OtpAnimationSpec`, `OtpHaptics` and `OtpLabels` (localizable
+  accessibility strings).
 
 ## Example
 
