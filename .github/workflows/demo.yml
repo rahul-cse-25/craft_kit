@@ -1,0 +1,57 @@
+name: Demo
+
+# Builds demo/ (a web-only Flutter app that uses the package from this
+# repository) and publishes it to GitHub Pages.
+#
+# One-time setup: Settings > Pages > Build and deployment > Source: GitHub
+# Actions.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'demo/**'
+      - 'lib/**'
+      - '.github/workflows/demo.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Build
+        working-directory: demo
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter build web --release --base-href /${{ github.event.repository.name }}/ --no-wasm-dry-run
+          # CanvasKit is loaded from Google's CDN (shared cache across Flutter
+          # sites), so the copy bundled by the build is not deployed.
+          rm -rf build/web/canvaskit
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: demo/build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

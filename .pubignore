@@ -15,3 +15,6 @@ pubspec.lock
 MIGRATION_FROM_BUMP.md
 screenshots/
 .github/
+
+# The web demo is deployed separately (see .github/workflows/demo.yml).
+demo/

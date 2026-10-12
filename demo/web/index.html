@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <!-- No pinch or double-tap zoom: swipes must stay swipes on a phone. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="Try craft_kit's swipe cards in your browser: spring physics, per-direction behaviors, undo, rewind and a Dock-style genie. A dependency-free Flutter package.">
+  <meta name="theme-color" content="#0E0E12">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="craft_kit">
+  <meta property="og:title" content="craft_kit: swipe cards for Flutter">
+  <meta property="og:description" content="Spring-physics swipe cards with undo, rewind and a Dock-style genie. Try it in the browser.">
+  <meta property="og:type" content="website">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="manifest" href="manifest.json">
+  <title>craft_kit: swipe cards for Flutter</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #0E0E12;
+      color: #fff;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      /* The page itself never scrolls, bounces or refreshes on a drag. */
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: #0E0E12;
+      transition: opacity .25s ease;
+      z-index: 10;
+    }
+    #splash.done { opacity: 0; pointer-events: none; }
+    #splash .spin {
+      width: 28px; height: 28px;
+      border: 3px solid #ffffff33; border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="splash"><div class="spin"></div><div>craft_kit</div></div>
+  <script>
+    // Hide the splash when Flutter has drawn its first frame.
+    window.addEventListener('flutter-first-frame', function () {
+      var s = document.getElementById('splash');
+      s.classList.add('done');
+      setTimeout(function () { s.remove(); }, 400);
+    });
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

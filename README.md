@@ -4,6 +4,9 @@ Flutter UI helpers that feel good to use: a **swipeable card stack** with spring
 physics, an **OTP input**, and **remembered-email suggestions**. No third-party
 dependencies, fully tested, and each part works on its own.
 
+**[Try it in your browser](https://rahul-cse-25.github.io/craft_kit/)**: the
+swipe cards, live, on desktop or on your phone. Nothing to install.
+
 ## See it in action
 
 ### Swipeable cards

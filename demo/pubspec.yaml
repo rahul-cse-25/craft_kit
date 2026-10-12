@@ -1,0 +1,20 @@
+name: craft_kit_demo
+description: Try craft_kit's swipe cards in the browser, on desktop or on a phone.
+publish_to: none
+version: 1.0.0
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  web: ^1.1.0
+  craft_kit:
+    path: ..
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
