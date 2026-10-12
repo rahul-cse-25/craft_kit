@@ -4,7 +4,7 @@ Flutter UI helpers that feel good to use: a **swipeable card stack** with spring
 physics, an **OTP input**, and **remembered-email suggestions**. No third-party
 dependencies, fully tested, and each part works on its own.
 
-**[Try it in your browser](https://rahul-cse-25.github.io/craft_kit/)**: the
+**[Try it in your browser](https://ancient-glitter-fe51.rahul-coder-25.workers.dev/)**: the
 swipe cards, live, on desktop or on your phone. Nothing to install.
 
 ## See it in action
@@ -270,7 +270,9 @@ OtpCodeField(
 
 ## Example
 
-A runnable demo of every feature is in [`example/`](example). On the Swipe tab,
+A small **[live demo](https://ancient-glitter-fe51.rahul-coder-25.workers.dev/)** runs in
+your browser (its source is in [`demo/`](demo)). A runnable demo of every
+feature is in [`example/`](example). On the Swipe tab,
 the tune button (top right) opens a **control center**: a draggable sheet that
 changes everything live while you keep swiping, including what each direction
 does, every physics number and spring, the stack layout, input and haptics,
