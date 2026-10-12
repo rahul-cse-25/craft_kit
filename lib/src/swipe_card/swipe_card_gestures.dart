@@ -342,7 +342,16 @@ extension _StackGestures<T> on _SwipeCardStackState<T> {
     final render = entry.boundaryKey.currentContext?.findRenderObject();
     if (render is! RenderRepaintBoundary || !render.hasSize) return null;
     try {
-      if (render.debugNeedsPaint) return null;
+      // `debugNeedsPaint` only has a value in debug builds: reading it in
+      // release or profile mode throws, which would silently turn every genie
+      // into the plain shrink. So it is read inside an assert, and a card that
+      // has not painted yet is caught below, where capturing it throws.
+      var needsPaint = false;
+      assert(() {
+        needsPaint = render.debugNeedsPaint;
+        return true;
+      }());
+      if (needsPaint) return null;
       final ratio = math.min(MediaQuery.devicePixelRatioOf(context), 2.0);
       final image = render.toImageSync(pixelRatio: ratio);
       debugLiveGenieImages++;

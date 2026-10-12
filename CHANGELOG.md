@@ -1,3 +1,9 @@
+## 0.1.1
+
+* Fixed: the genie effect never ran in release and profile builds (every
+  consumed card fell back to the plain shrink). Capturing the card read a
+  debug-only value that throws outside debug mode.
+
 ## 0.1.0
 
 * Initial release.
