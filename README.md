@@ -1,11 +1,36 @@
-# craft_kit
+<h1 align="center">craft_kit</h1>
 
-Flutter UI helpers that feel good to use: a **swipeable card stack** with spring
-physics, an **OTP input**, and **remembered-email suggestions**. No third-party
-dependencies, fully tested, and each part works on its own.
+<p align="center">
+  Flutter UI helpers that feel good to use: a <b>swipeable card stack</b> with
+  spring physics, an <b>OTP input</b>, and <b>remembered-email suggestions</b>.<br>
+  No third-party dependencies, fully tested, and each part works on its own.
+</p>
 
-**[Try it in your browser](https://ancient-glitter-fe51.rahul-coder-25.workers.dev/)**: the
-swipe cards, live, on desktop or on your phone. Nothing to install.
+<p align="center">
+  <a href="https://pub.dev/packages/craft_kit"><img alt="pub package" src="https://img.shields.io/pub/v/craft_kit?logo=dart&label=pub.dev"></a>
+  <a href="https://pub.dev/packages/craft_kit/score"><img alt="pub points" src="https://img.shields.io/pub/points/craft_kit?logo=dart&label=pub%20points"></a>
+  <a href="https://pub.dev/packages/craft_kit/score"><img alt="likes" src="https://img.shields.io/pub/likes/craft_kit?logo=dart&label=likes"></a>
+  <a href="https://github.com/rahul-cse-25/craft_kit/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/rahul-cse-25/craft_kit?logo=github"></a>
+  <a href="https://github.com/rahul-cse-25/craft_kit/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/rahul-cse-25/craft_kit"></a>
+  <a href="https://pub.dev/packages/craft_kit"><img alt="Platform" src="https://img.shields.io/badge/platform-android%20%7C%20ios%20%7C%20web%20%7C%20desktop-blue?logo=flutter"></a>
+</p>
+
+<p align="center">
+  <a href="https://ancient-glitter-fe51.rahul-coder-25.workers.dev/"><b>Live demo</b></a> ·
+  <a href="https://pub.dev/packages/craft_kit">pub.dev</a> ·
+  <a href="https://pub.dev/documentation/craft_kit/latest/">API docs</a> ·
+  <a href="https://github.com/rahul-cse-25/craft_kit">GitHub</a> ·
+  <a href="CHANGELOG.md">Changelog</a> ·
+  <a href="https://github.com/rahul-cse-25/craft_kit/issues">Issues</a>
+</p>
+
+<p align="center">
+  <b><a href="https://ancient-glitter-fe51.rahul-coder-25.workers.dev/">Try it in your browser</a></b>:
+  the swipe cards, live, on desktop or on your phone. Nothing to install.<br>
+  If craft_kit saves you time, a ⭐ on
+  <a href="https://github.com/rahul-cse-25/craft_kit">GitHub</a> or a 👍 on
+  <a href="https://pub.dev/packages/craft_kit">pub.dev</a> helps others find it.
+</p>
 
 ## See it in action
 
@@ -277,6 +302,16 @@ the tune button (top right) opens a **control center**: a draggable sheet that
 changes everything live while you keep swiping, including what each direction
 does, every physics number and spring, the stack layout, input and haptics,
 feeds and preloading, a live readout of drag progress, and an event log.
+
+## Links and support
+
+| | |
+|---|---|
+| Try it | [Live demo](https://ancient-glitter-fe51.rahul-coder-25.workers.dev/) |
+| Package | [pub.dev/packages/craft_kit](https://pub.dev/packages/craft_kit) · [API docs](https://pub.dev/documentation/craft_kit/latest/) · [Changelog](CHANGELOG.md) |
+| Source | [github.com/rahul-cse-25/craft_kit](https://github.com/rahul-cse-25/craft_kit) |
+| Bugs and ideas | [Open an issue](https://github.com/rahul-cse-25/craft_kit/issues) |
+| Like it? | [Star on GitHub](https://github.com/rahul-cse-25/craft_kit) · [Like on pub.dev](https://pub.dev/packages/craft_kit) |
 
 ## Contributing
 
