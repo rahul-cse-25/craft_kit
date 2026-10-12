@@ -1,5 +1,4 @@
 import 'package:craft_kit/craft_kit.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'swipe_test_utils.dart';

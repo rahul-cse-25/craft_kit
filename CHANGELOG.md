@@ -1,3 +1,13 @@
+## 0.1.2
+
+* Fixed (web): undoing or rewinding a card that was consumed with the genie did
+  nothing and left the deck stuck. On the default CanvasKit renderer,
+  disposing an `ImageShader` also disposes the picture it was made from, so
+  the picture kept for the undo was already gone. The shader now gets its own
+  reference on the web.
+* A card whose picture can no longer be drawn now comes back without the genie
+  instead of leaving the deck half restored.
+
 ## 0.1.1
 
 * Fixed: the genie effect never ran in release and profile builds (every

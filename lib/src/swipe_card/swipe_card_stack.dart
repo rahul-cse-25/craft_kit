@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart'
-    show ValueListenable, visibleForTesting;
+    show ValueListenable, kIsWeb, visibleForTesting;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart' show RenderRepaintBoundary;
 import 'package:flutter/scheduler.dart';
@@ -865,24 +865,31 @@ class _SwipeCardStackState<T> extends State<SwipeCardStack<T>>
       }
       if (local != null) {
         final rest = geometry.cardRect;
-        genie = _GenieRun(
-          image: image,
-          quad: <Offset>[
-            rest.topLeft,
-            rest.topRight,
-            rest.bottomRight,
-            rest.bottomLeft,
-          ],
-          target: _pointIn(local, target.alignment),
-          lag: target.genieLag,
-        );
-        genie.progress.value = genieFrom;
-        genie.reverse = ScalarSpring(
-          from: genieFrom,
-          velocity: 0,
-          spring: physics.consume.description,
-        );
-        genie.reverseStart = _newStart;
+        try {
+          genie = _GenieRun(
+            image: image,
+            quad: <Offset>[
+              rest.topLeft,
+              rest.topRight,
+              rest.bottomRight,
+              rest.bottomLeft,
+            ],
+            target: _pointIn(local, target.alignment),
+            lag: target.genieLag,
+          );
+          genie.progress.value = genieFrom;
+          genie.reverse = ScalarSpring(
+            from: genieFrom,
+            velocity: 0,
+            spring: physics.consume.description,
+          );
+          genie.reverseStart = _newStart;
+        } on Object {
+          // A picture that can no longer be drawn must never leave the deck
+          // half restored: the card simply comes back without the genie.
+          genie = null;
+          image = null;
+        }
       }
     }
     if (genie == null) _disposeImage(image);

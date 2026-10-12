@@ -7,7 +7,7 @@ class _GenieRun {
     required this.target,
     required this.lag,
   }) : shader = ui.ImageShader(
-         image,
+         _forShader(image),
          TileMode.clamp,
          TileMode.clamp,
          Matrix4.identity().storage,
@@ -25,6 +25,15 @@ class _GenieRun {
       textureCoordinates[i + 1] = fractions[i + 1] * h;
     }
   }
+
+  /// The picture the shader draws from.
+  ///
+  /// On the web, the default (CanvasKit) engine's `ImageShader.dispose()`
+  /// also disposes the image it was created with, while on every other
+  /// engine it leaves the image alone. Handing the shader its own reference
+  /// on the web means disposing the shader never takes the original picture
+  /// with it: the original must survive to be reused when the card is undone.
+  static ui.Image _forShader(ui.Image image) => kIsWeb ? image.clone() : image;
 
   final ui.Image image;
   final ui.ImageShader shader;
