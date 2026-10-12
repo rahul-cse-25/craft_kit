@@ -1,3 +1,8 @@
+## 0.1.3
+
+* Documentation: README header with badges, quick links, the live demo link and
+  a support section.
+
 ## 0.1.2
 
 * Fixed (web): undoing or rewinding a card that was consumed with the genie did
