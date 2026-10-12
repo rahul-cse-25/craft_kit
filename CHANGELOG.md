@@ -15,6 +15,8 @@
 
 ## 0.1.1
 
+* Known issue (web): undoing or rewinding a card consumed with the genie fails
+  on the default CanvasKit renderer. Fixed in 0.1.2; use 0.1.3 or newer.
 * Fixed: the genie effect never ran in release and profile builds (every
   consumed card fell back to the plain shrink). Capturing the card read a
   debug-only value that throws outside debug mode.
