@@ -6,7 +6,7 @@
 /// * OTP input: [OtpCodeField] and [OtpCodeController].
 /// * Swipeable cards: [SwipeCardStack], [SwipeCardController], per-direction
 ///   [SwipeBehavior]s, spring physics ([SwipePhysics]) and custom stack looks
-///   ([SwipeStackLayout]).
+///   ([SwipeStackLayout]), and [SwipeDeckSwitcher] to replace a whole deck.
 library;
 
 export 'src/email/email_input_formatter.dart';
@@ -31,6 +31,7 @@ export 'src/swipe_card/engine/swipe_moves.dart';
 export 'src/swipe_card/swipe_behavior.dart';
 export 'src/swipe_card/swipe_card_controller.dart' hide SwipeHandle;
 export 'src/swipe_card/swipe_card_stack.dart' hide debugLiveGenieImages;
+export 'src/swipe_card/swipe_deck_switcher.dart';
 export 'src/swipe_card/swipe_direction.dart';
 export 'src/swipe_card/swipe_haptics.dart';
 export 'src/swipe_card/swipe_intent_overlay.dart';

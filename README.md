@@ -167,6 +167,22 @@ programmatic swipe.
 song, say). Cards before the top one count as swiped, so `undo` still brings
 them back, sliding in from above.
 
+**Replacing the whole deck.** Wrap the stack in `SwipeDeckSwitcher` and give it
+a `deckKey` (a search query, a filter). When the key changes, the old deck is
+frozen as a picture and leaves while the new one arrives, live:
+`SwipeDeckTransition.deal` throws the old deck off and deals the new one in on
+a spring; `flip` turns the deck edge-on, swaps it unseen and settles; `fade` and
+`none` are there too. Pick the transition per change. Reduced motion turns
+every transition into a short fade.
+
+```dart
+SwipeDeckSwitcher(
+  deckKey: query,
+  transition: isRefinement ? SwipeDeckTransition.flip : SwipeDeckTransition.deal,
+  child: SwipeCardStack<Order>(items: matches, itemBuilder: buildCard),
+)
+```
+
 **Rewind and undo.** Cards can be coming back while others are already on
 top of them, so `rewind()` (optionally `count:` and `stagger:`) and rapid
 undos overlap smoothly instead of jumping. Touching the top card stops a

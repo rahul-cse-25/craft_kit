@@ -1,3 +1,11 @@
+## Unreleased
+
+* `SwipeDeckSwitcher` replaces a whole deck when its `deckKey` changes. The
+  old deck is frozen as a picture and leaves while the new one arrives:
+  `SwipeDeckTransition.deal` (thrown off, new deck dealt in on a spring),
+  `flip` (swapped unseen while edge-on), `fade` and `none`. Reduced motion
+  turns every transition into a short fade. `SwipeCardStack` is unchanged.
+
 ## 0.1.3
 
 * Documentation: README header with badges, quick links, the live demo link and
